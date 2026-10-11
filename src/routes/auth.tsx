@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>) => ({
-    redirect: typeof s.redirect === "string" && s.redirect.startsWith("/") && !s.redirect.startsWith("//") ? s.redirect : undefined,
+    redirect: typeof s["redirect"] === "string" && s["redirect"].startsWith("/") && !s["redirect"].startsWith("//") ? s["redirect"] : undefined,
   }),
   head: () => ({
     meta: [
@@ -33,15 +33,15 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
 
-  async function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent): Promise<void> {
     e.preventDefault();
-    if (!/^\S+@\S+\.\S+$/.test(email)) return toast.error("Enter a valid email address.");
-    if (password.length < 8) return toast.error("Password must be at least 8 characters.");
+    if (!/^\S+@\S+\.\S+$/.test(email)) { toast.error("Enter a valid email address."); return; }
+    if (password.length < 8) { toast.error("Password must be at least 8 characters."); return; }
     setBusy(true);
     if (mode === "in") {
       const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       setBusy(false);
-      if (error) return toast.error(error.message);
+      if (error) { toast.error(error.message); return; }
       navigate({ to: redirect ?? "/admin" });
     } else {
       const { error } = await supabase.auth.signUp({
@@ -50,7 +50,7 @@ function AuthPage() {
         options: { emailRedirectTo: window.location.origin + "/admin", data: { full_name: name.trim() } },
       });
       setBusy(false);
-      if (error) return toast.error(error.message);
+      if (error) { toast.error(error.message); return; }
       setSent(true);
     }
   }

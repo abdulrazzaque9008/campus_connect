@@ -9,12 +9,12 @@ import { CATEGORIES, type Category } from "@/lib/events";
 import { upcomingEventsQuery } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 
-type Search = { q?: string; category?: Category };
+type Search = { q?: string | undefined; category?: Category | undefined };
 
 export const Route = createFileRoute("/events/")({
   validateSearch: (s: Record<string, unknown>): Search => ({
-    q: typeof s.q === "string" && s.q ? s.q : undefined,
-    category: CATEGORIES.includes(s.category as Category) ? (s.category as Category) : undefined,
+    q: typeof s["q"] === "string" && s["q"] ? s["q"] : undefined,
+    category: CATEGORIES.includes(s["category"] as Category) ? (s["category"] as Category) : undefined,
   }),
   head: () => ({
     meta: [

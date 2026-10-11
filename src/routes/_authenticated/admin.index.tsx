@@ -33,9 +33,9 @@ function Overview() {
     },
   });
 
-  async function setStatus(e: EventRow, status: "cancelled" | "completed") {
+  async function setStatus(e: EventRow, status: "cancelled" | "completed"): Promise<void> {
     const { error } = await supabase.from("events").update({ status }).eq("id", e.id);
-    if (error) return toast.error(friendlyError(error));
+    if (error) { toast.error(friendlyError(error)); return; }
     toast.success(status === "cancelled" ? "Event cancelled" : "Marked as completed");
     qc.invalidateQueries({ queryKey: ["events"] });
   }
@@ -94,7 +94,7 @@ function Overview() {
               <ResponsiveContainer>
                 <PieChart>
                   <Pie data={depts} dataKey="value" nameKey="name" innerRadius={50} outerRadius={90}>
-                    {depts.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                    {depts.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length] ?? "var(--chart-1)"} />)}
                   </Pie>
                   <Tooltip />
                 </PieChart>
@@ -109,7 +109,7 @@ function Overview() {
       <div>
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold">Manage events</h2>
-          <Button asChild><Link to="/admin/events/new">Create event</Link></Button>
+          
         </div>
         <div className="mt-4 overflow-x-auto rounded-2xl border bg-card shadow-card">
           <table className="w-full text-sm">
@@ -133,8 +133,8 @@ function Overview() {
                   <td className="p-3">
                     <div className="flex flex-wrap justify-end gap-1">
                       <Button asChild size="sm" variant="ghost"><Link to="/events/$eventId" params={{ eventId: e.id }}>View</Link></Button>
-                      <Button asChild size="sm" variant="ghost"><Link to="/admin/events/$eventId/edit" params={{ eventId: e.id }}>Edit</Link></Button>
-                      <Button asChild size="sm" variant="outline"><Link to="/admin/events/$eventId/registrations" params={{ eventId: e.id }}>Registrations</Link></Button>
+                      
+                      
                       {e.status === "published" && (
                         <>
                           <Button size="sm" variant="ghost" onClick={() => setStatus(e, "completed")}>Complete</Button>
