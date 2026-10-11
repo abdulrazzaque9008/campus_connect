@@ -11,7 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CategoriesRouteImport } from './routes/categories'
+import { Route as MyPassesRouteImport } from './routes/my-passes'
 import { Route as EventsIndexRouteImport } from './routes/events.index'
+import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
+import { Route as PassTokenRouteImport } from './routes/pass.$token'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -23,39 +26,85 @@ const CategoriesRoute = CategoriesRouteImport.update({
   path: '/categories',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MyPassesRoute = MyPassesRouteImport.update({
+  id: '/my-passes',
+  path: '/my-passes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EventsIndexRoute = EventsIndexRouteImport.update({
   id: '/events/',
   path: '/events/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventsEventIdRoute = EventsEventIdRouteImport.update({
+  id: '/events/$eventId',
+  path: '/events/$eventId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PassTokenRoute = PassTokenRouteImport.update({
+  id: '/pass/$token',
+  path: '/pass/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/categories': typeof CategoriesRoute
+  '/my-passes': typeof MyPassesRoute
+  '/events/$eventId': typeof EventsEventIdRoute
+  '/pass/$token': typeof PassTokenRoute
   '/events/': typeof EventsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/categories': typeof CategoriesRoute
+  '/my-passes': typeof MyPassesRoute
+  '/events/$eventId': typeof EventsEventIdRoute
+  '/pass/$token': typeof PassTokenRoute
   '/events': typeof EventsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/categories': typeof CategoriesRoute
+  '/my-passes': typeof MyPassesRoute
+  '/events/$eventId': typeof EventsEventIdRoute
+  '/pass/$token': typeof PassTokenRoute
   '/events/': typeof EventsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/categories' | '/events/'
+  fullPaths:
+    | '/'
+    | '/categories'
+    | '/my-passes'
+    | '/events/$eventId'
+    | '/pass/$token'
+    | '/events/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/categories' | '/events'
-  id: '__root__' | '/' | '/categories' | '/events/'
+  to:
+    | '/'
+    | '/categories'
+    | '/my-passes'
+    | '/events/$eventId'
+    | '/pass/$token'
+    | '/events'
+  id:
+    | '__root__'
+    | '/'
+    | '/categories'
+    | '/my-passes'
+    | '/events/$eventId'
+    | '/pass/$token'
+    | '/events/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CategoriesRoute: typeof CategoriesRoute
+  MyPassesRoute: typeof MyPassesRoute
+  EventsEventIdRoute: typeof EventsEventIdRoute
+  PassTokenRoute: typeof PassTokenRoute
   EventsIndexRoute: typeof EventsIndexRoute
 }
 
@@ -75,11 +124,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CategoriesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/my-passes': {
+      id: '/my-passes'
+      path: '/my-passes'
+      fullPath: '/my-passes'
+      preLoaderRoute: typeof MyPassesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/events/': {
       id: '/events/'
       path: '/events'
       fullPath: '/events/'
       preLoaderRoute: typeof EventsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/events/$eventId': {
+      id: '/events/$eventId'
+      path: '/events/$eventId'
+      fullPath: '/events/$eventId'
+      preLoaderRoute: typeof EventsEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pass/$token': {
+      id: '/pass/$token'
+      path: '/pass/$token'
+      fullPath: '/pass/$token'
+      preLoaderRoute: typeof PassTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -88,6 +158,9 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CategoriesRoute: CategoriesRoute,
+  MyPassesRoute: MyPassesRoute,
+  EventsEventIdRoute: EventsEventIdRoute,
+  PassTokenRoute: PassTokenRoute,
   EventsIndexRoute: EventsIndexRoute,
 }
 export const routeTree = rootRouteImport
