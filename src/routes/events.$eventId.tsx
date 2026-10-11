@@ -122,11 +122,11 @@ function RegisterDialog({ ev, open, onOpenChange }: { ev: EventRow; open: boolea
     const n = name.trim().replace(/\s+/g, " ");
     const p = prn.trim().toUpperCase();
     const errs: Record<string, string> = {};
-    if (n.length < 2) errs.name = "Please enter your full name.";
-    if (n.length > 100) errs.name = "Name is too long.";
-    if (!p) errs.prn = "PRN is required.";
-    else if (rule && !new RegExp(rule.regex).test(p)) errs.prn = `Invalid PRN format. ${rule.hint}`;
-    if (!dept) errs.dept = "Please choose your department.";
+    if (n.length < 2) errs["name"] = "Please enter your full name.";
+    if (n.length > 100) errs["name"] = "Name is too long.";
+    if (!p) errs["prn"] = "PRN is required.";
+    else if (rule && !new RegExp(rule.regex).test(p)) errs["prn"] = `Invalid PRN format. ${rule.hint}`;
+    if (!dept) errs["dept"] = "Please choose your department.";
     setErrors(errs);
     if (Object.keys(errs).length) return;
 
@@ -160,12 +160,12 @@ function RegisterDialog({ ev, open, onOpenChange }: { ev: EventRow; open: boolea
           <div className="space-y-1.5">
             <Label htmlFor="name">Full name</Label>
             <Input id="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={100} autoComplete="name" />
-            {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+            {errors["name"] && <p className="text-sm text-destructive">{errors["name"]}</p>}
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="prn">PRN</Label>
             <Input id="prn" value={prn} onChange={(e) => setPrn(e.target.value)} maxLength={20} placeholder={rule?.hint} />
-            {errors.prn && <p className="text-sm text-destructive">{errors.prn}</p>}
+            {errors["prn"] && <p className="text-sm text-destructive">{errors["prn"]}</p>}
           </div>
           <div className="space-y-1.5">
             <Label>Department</Label>
@@ -175,7 +175,7 @@ function RegisterDialog({ ev, open, onOpenChange }: { ev: EventRow; open: boolea
                 {DEPARTMENTS.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
               </SelectContent>
             </Select>
-            {errors.dept && <p className="text-sm text-destructive">{errors.dept}</p>}
+            {errors["dept"] && <p className="text-sm text-destructive">{errors["dept"]}</p>}
           </div>
           <Button type="submit" className="w-full" size="lg" disabled={submitting}>
             {submitting && <Loader2 className="animate-spin" />} Confirm registration

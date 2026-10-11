@@ -44,7 +44,7 @@ export const prnRuleQuery = queryOptions({
   queryFn: async () => {
     const { data } = await supabase.from("app_settings").select("key,value").in("key", ["prn_regex", "prn_hint"]);
     const map = Object.fromEntries((data ?? []).map((r) => [r.key, r.value]));
-    return { regex: map.prn_regex ?? "^[A-Za-z0-9]{6,16}$", hint: map.prn_hint ?? "" };
+    return { regex: map["prn_regex"] ?? "^[A-Za-z0-9]{6,16}$", hint: map["prn_hint"] ?? "" };
   },
   staleTime: 5 * 60_000,
 });

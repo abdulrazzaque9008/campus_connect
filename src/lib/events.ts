@@ -67,7 +67,7 @@ export function fmtDate(d: string) {
 export function fmtTime(t: string) {
   const [h, m] = t.split(":").map(Number);
   const d = new Date();
-  d.setHours(h, m);
+  d.setHours(h ?? 0, m ?? 0);
   return d.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" });
 }
 
@@ -89,7 +89,7 @@ export const REGISTER_ERRORS: Record<string, string> = {
 
 export function friendlyError(err: { message?: string } | null | undefined) {
   const msg = err?.message ?? "";
-  for (const key of Object.keys(REGISTER_ERRORS)) if (msg.includes(key)) return REGISTER_ERRORS[key];
+  for (const key of Object.keys(REGISTER_ERRORS)) if (msg.includes(key)) return REGISTER_ERRORS[key] ?? msg;
   if (msg.includes("Capacity cannot be lower")) return msg;
   if (/fetch|network/i.test(msg)) return "Network problem — check your connection and try again.";
   return msg || "Something went wrong. Please try again.";

@@ -24,7 +24,7 @@ export function SiteHeader() {
     await qc.cancelQueries();
     qc.clear();
     await supabase.auth.signOut();
-    navigate({ to: "/auth", replace: true });
+    navigate({ to: "/auth", search: { redirect: undefined }, replace: true });
   }
 
   return (
@@ -57,7 +57,7 @@ export function SiteHeader() {
             </Button>
           ) : (
             <Button asChild size="sm">
-              <Link to="/auth">Organiser login</Link>
+              <Link to="/auth" search={{ redirect: undefined }}>Organiser login</Link>
             </Button>
           )}
         </div>
@@ -85,7 +85,7 @@ export function SiteHeader() {
               </Button>
             ) : (
               <Button asChild size="sm">
-                <Link to="/auth" onClick={() => setOpen(false)}>
+                <Link to="/auth" search={{ redirect: undefined }} onClick={() => setOpen(false)}>
                   Organiser login
                 </Link>
               </Button>

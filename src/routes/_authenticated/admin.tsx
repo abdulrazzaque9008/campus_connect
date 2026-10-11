@@ -38,8 +38,6 @@ function AdminLayout() {
       <nav className="no-print mb-8 flex flex-wrap gap-2">
         {[
           { to: "/admin", label: "Overview" },
-          { to: "/admin/events/new", label: "Create event" },
-          { to: "/admin/verify", label: "Verify pass" },
         ].map((n) => (
           <Link
             key={n.to}
