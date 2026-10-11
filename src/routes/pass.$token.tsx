@@ -1,0 +1,72 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { Download, Loader2, Printer } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { EntryPass } from "@/components/entry-pass";
+import { supabase } from "@/integrations/supabase/client";
+import { savePassToken } from "@/lib/events";
+
+export const Route = createFileRoute("/pass/$token")({
+  head: () => ({
+    meta: [
+      { title: "Your Entry Pass – CampusConnect" },
+      { name: "description", content: "Your QR entry pass for a JNEC club event." },
+      { name: "robots", content: "noindex" },
+      { property: "og:title", content: "Your Entry Pass – CampusConnect" },
+      { property: "og:description", content: "Your QR entry pass for a JNEC club event." },
+    ],
+  }),
+  component: PassPage,
+});
+
+function PassPage() {
+  const { token } = Route.useParams();
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["pass", token],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_pass", { _token: token });
+      if (error) throw error;
+      return data?.[0] ?? null;
+    },
+  });
+  useEffect(() => {
+    if (data) savePassToken(token);
+  }, [data, token]);
+
+  function download() {
+    const canvas = document.querySelector<HTMLCanvasElement>("#pass canvas");
+    if (!canvas || !data) return;
+    const a = document.createElement("a");
+    a.href = canvas.toDataURL("image/png");
+    a.download = `${data.registration_code}-entry-qr.png`;
+    a.click();
+  }
+
+  if (isLoading) return <div className="grid min-h-[50vh] place-items-center"><Loader2 className="size-8 animate-spin text-accent" /></div>;
+  if (error || !data)
+    return (
+      <div className="mx-auto max-w-md px-4 py-24 text-center">
+        <h1 className="text-2xl font-bold">Pass not found</h1>
+        <p className="mt-2 text-muted-foreground">This link is invalid or has expired.</p>
+        <Button asChild className="mt-6"><Link to="/events">Browse events</Link></Button>
+      </div>
+    );
+
+  return (
+    <div className="mx-auto max-w-2xl px-4 py-12">
+      <div className="no-print mb-6">
+        <h1 className="text-2xl font-extrabold">You're in! 🎉</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Save this page — it's your entry pass. It's also kept under "My Passes" on this device.
+        </p>
+      </div>
+      <EntryPass pass={data} token={token} id="pass" />
+      <div className="no-print mt-6 flex flex-wrap gap-3">
+        <Button onClick={() => window.print()}><Printer /> Print pass</Button>
+        <Button variant="outline" onClick={download}><Download /> Download QR</Button>
+        <Button variant="ghost" asChild><Link to="/my-passes">My passes</Link></Button>
+      </div>
+    </div>
+  );
+}
