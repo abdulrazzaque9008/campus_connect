@@ -19,6 +19,10 @@ import { Route as EventsIndexRouteImport } from './routes/events.index'
 import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
 import { Route as PassTokenRouteImport } from './routes/pass.$token'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminVerifyRouteImport } from './routes/_authenticated/admin.verify'
+import { Route as AuthenticatedAdminEventsNewRouteImport } from './routes/_authenticated/admin.events.new'
+import { Route as AuthenticatedAdminEventsEventIdEditRouteImport } from './routes/_authenticated/admin.events.$eventId.edit'
+import { Route as AuthenticatedAdminEventsEventIdRegistrationsRouteImport } from './routes/_authenticated/admin.events.$eventId.registrations'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -69,6 +73,30 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminVerifyRoute =
+  AuthenticatedAdminVerifyRouteImport.update({
+    id: '/verify',
+    path: '/verify',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminEventsNewRoute =
+  AuthenticatedAdminEventsNewRouteImport.update({
+    id: '/events/new',
+    path: '/events/new',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminEventsEventIdEditRoute =
+  AuthenticatedAdminEventsEventIdEditRouteImport.update({
+    id: '/events/$eventId/edit',
+    path: '/events/$eventId/edit',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminEventsEventIdRegistrationsRoute =
+  AuthenticatedAdminEventsEventIdRegistrationsRouteImport.update({
+    id: '/events/$eventId/registrations',
+    path: '/events/$eventId/registrations',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -79,7 +107,11 @@ export interface FileRoutesByFullPath {
   '/events/$eventId': typeof EventsEventIdRoute
   '/pass/$token': typeof PassTokenRoute
   '/events/': typeof EventsIndexRoute
+  '/admin/verify': typeof AuthenticatedAdminVerifyRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/admin/events/new': typeof AuthenticatedAdminEventsNewRoute
+  '/admin/events/$eventId/edit': typeof AuthenticatedAdminEventsEventIdEditRoute
+  '/admin/events/$eventId/registrations': typeof AuthenticatedAdminEventsEventIdRegistrationsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -89,7 +121,11 @@ export interface FileRoutesByTo {
   '/events/$eventId': typeof EventsEventIdRoute
   '/pass/$token': typeof PassTokenRoute
   '/events': typeof EventsIndexRoute
+  '/admin/verify': typeof AuthenticatedAdminVerifyRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
+  '/admin/events/new': typeof AuthenticatedAdminEventsNewRoute
+  '/admin/events/$eventId/edit': typeof AuthenticatedAdminEventsEventIdEditRoute
+  '/admin/events/$eventId/registrations': typeof AuthenticatedAdminEventsEventIdRegistrationsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -102,7 +138,11 @@ export interface FileRoutesById {
   '/events/$eventId': typeof EventsEventIdRoute
   '/pass/$token': typeof PassTokenRoute
   '/events/': typeof EventsIndexRoute
+  '/_authenticated/admin/verify': typeof AuthenticatedAdminVerifyRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/admin/events/new': typeof AuthenticatedAdminEventsNewRoute
+  '/_authenticated/admin/events/$eventId/edit': typeof AuthenticatedAdminEventsEventIdEditRoute
+  '/_authenticated/admin/events/$eventId/registrations': typeof AuthenticatedAdminEventsEventIdRegistrationsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -115,7 +155,11 @@ export interface FileRouteTypes {
     | '/events/$eventId'
     | '/pass/$token'
     | '/events/'
+    | '/admin/verify'
     | '/admin/'
+    | '/admin/events/new'
+    | '/admin/events/$eventId/edit'
+    | '/admin/events/$eventId/registrations'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -125,7 +169,11 @@ export interface FileRouteTypes {
     | '/events/$eventId'
     | '/pass/$token'
     | '/events'
+    | '/admin/verify'
     | '/admin'
+    | '/admin/events/new'
+    | '/admin/events/$eventId/edit'
+    | '/admin/events/$eventId/registrations'
   id:
     | '__root__'
     | '/'
@@ -137,7 +185,11 @@ export interface FileRouteTypes {
     | '/events/$eventId'
     | '/pass/$token'
     | '/events/'
+    | '/_authenticated/admin/verify'
     | '/_authenticated/admin/'
+    | '/_authenticated/admin/events/new'
+    | '/_authenticated/admin/events/$eventId/edit'
+    | '/_authenticated/admin/events/$eventId/registrations'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -223,15 +275,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/verify': {
+      id: '/_authenticated/admin/verify'
+      path: '/verify'
+      fullPath: '/admin/verify'
+      preLoaderRoute: typeof AuthenticatedAdminVerifyRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/events/new': {
+      id: '/_authenticated/admin/events/new'
+      path: '/events/new'
+      fullPath: '/admin/events/new'
+      preLoaderRoute: typeof AuthenticatedAdminEventsNewRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/events/$eventId/edit': {
+      id: '/_authenticated/admin/events/$eventId/edit'
+      path: '/events/$eventId/edit'
+      fullPath: '/admin/events/$eventId/edit'
+      preLoaderRoute: typeof AuthenticatedAdminEventsEventIdEditRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/events/$eventId/registrations': {
+      id: '/_authenticated/admin/events/$eventId/registrations'
+      path: '/events/$eventId/registrations'
+      fullPath: '/admin/events/$eventId/registrations'
+      preLoaderRoute: typeof AuthenticatedAdminEventsEventIdRegistrationsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
   }
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminVerifyRoute: typeof AuthenticatedAdminVerifyRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+  AuthenticatedAdminEventsNewRoute: typeof AuthenticatedAdminEventsNewRoute
+  AuthenticatedAdminEventsEventIdEditRoute: typeof AuthenticatedAdminEventsEventIdEditRoute
+  AuthenticatedAdminEventsEventIdRegistrationsRoute: typeof AuthenticatedAdminEventsEventIdRegistrationsRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminVerifyRoute: AuthenticatedAdminVerifyRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  AuthenticatedAdminEventsNewRoute: AuthenticatedAdminEventsNewRoute,
+  AuthenticatedAdminEventsEventIdEditRoute:
+    AuthenticatedAdminEventsEventIdEditRoute,
+  AuthenticatedAdminEventsEventIdRegistrationsRoute:
+    AuthenticatedAdminEventsEventIdRegistrationsRoute,
 }
 
 const AuthenticatedAdminRouteWithChildren =
