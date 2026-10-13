@@ -109,6 +109,7 @@ function Overview() {
       <div>
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold">Manage events</h2>
+          <Button asChild><Link to="/admin/events/new">Create event</Link></Button>
           
         </div>
         <div className="mt-4 overflow-x-auto rounded-2xl border bg-card shadow-card">
@@ -133,6 +134,8 @@ function Overview() {
                   <td className="p-3">
                     <div className="flex flex-wrap justify-end gap-1">
                       <Button asChild size="sm" variant="ghost"><Link to="/events/$eventId" params={{ eventId: e.id }}>View</Link></Button>
+                      <Button asChild size="sm" variant="ghost"><Link to="/admin/events/$eventId/edit" params={{ eventId: e.id }}>Edit</Link></Button>
+                      <Button asChild size="sm" variant="outline"><Link to="/admin/events/$eventId/registrations" params={{ eventId: e.id }}>Registrations</Link></Button>
                       
                       
                       {e.status === "published" && (
