@@ -20,6 +20,8 @@ import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
 import { Route as PassTokenRouteImport } from './routes/pass.$token'
 import { Route as VerifyTokenRouteImport } from './routes/verify.$token'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminProfileRouteImport } from './routes/_authenticated/admin.profile'
+import { Route as AuthenticatedAdminRegistrationsRouteImport } from './routes/_authenticated/admin.registrations'
 import { Route as AuthenticatedAdminTeamRouteImport } from './routes/_authenticated/admin.team'
 import { Route as AuthenticatedAdminVerifyRouteImport } from './routes/_authenticated/admin.verify'
 import { Route as AuthenticatedAdminEventsNewRouteImport } from './routes/_authenticated/admin.events.new'
@@ -80,6 +82,18 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminProfileRoute =
+  AuthenticatedAdminProfileRouteImport.update({
+    id: '/profile',
+    path: '/profile',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminRegistrationsRoute =
+  AuthenticatedAdminRegistrationsRouteImport.update({
+    id: '/registrations',
+    path: '/registrations',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminTeamRoute = AuthenticatedAdminTeamRouteImport.update({
   id: '/team',
   path: '/team',
@@ -120,6 +134,8 @@ export interface FileRoutesByFullPath {
   '/pass/$token': typeof PassTokenRoute
   '/verify/$token': typeof VerifyTokenRoute
   '/events/': typeof EventsIndexRoute
+  '/admin/profile': typeof AuthenticatedAdminProfileRoute
+  '/admin/registrations': typeof AuthenticatedAdminRegistrationsRoute
   '/admin/team': typeof AuthenticatedAdminTeamRoute
   '/admin/verify': typeof AuthenticatedAdminVerifyRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -136,6 +152,8 @@ export interface FileRoutesByTo {
   '/pass/$token': typeof PassTokenRoute
   '/verify/$token': typeof VerifyTokenRoute
   '/events': typeof EventsIndexRoute
+  '/admin/profile': typeof AuthenticatedAdminProfileRoute
+  '/admin/registrations': typeof AuthenticatedAdminRegistrationsRoute
   '/admin/team': typeof AuthenticatedAdminTeamRoute
   '/admin/verify': typeof AuthenticatedAdminVerifyRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -155,6 +173,8 @@ export interface FileRoutesById {
   '/pass/$token': typeof PassTokenRoute
   '/verify/$token': typeof VerifyTokenRoute
   '/events/': typeof EventsIndexRoute
+  '/_authenticated/admin/profile': typeof AuthenticatedAdminProfileRoute
+  '/_authenticated/admin/registrations': typeof AuthenticatedAdminRegistrationsRoute
   '/_authenticated/admin/team': typeof AuthenticatedAdminTeamRoute
   '/_authenticated/admin/verify': typeof AuthenticatedAdminVerifyRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -174,6 +194,8 @@ export interface FileRouteTypes {
     | '/pass/$token'
     | '/verify/$token'
     | '/events/'
+    | '/admin/profile'
+    | '/admin/registrations'
     | '/admin/team'
     | '/admin/verify'
     | '/admin/'
@@ -190,6 +212,8 @@ export interface FileRouteTypes {
     | '/pass/$token'
     | '/verify/$token'
     | '/events'
+    | '/admin/profile'
+    | '/admin/registrations'
     | '/admin/team'
     | '/admin/verify'
     | '/admin'
@@ -208,6 +232,8 @@ export interface FileRouteTypes {
     | '/pass/$token'
     | '/verify/$token'
     | '/events/'
+    | '/_authenticated/admin/profile'
+    | '/_authenticated/admin/registrations'
     | '/_authenticated/admin/team'
     | '/_authenticated/admin/verify'
     | '/_authenticated/admin/'
@@ -307,6 +333,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/profile': {
+      id: '/_authenticated/admin/profile'
+      path: '/profile'
+      fullPath: '/admin/profile'
+      preLoaderRoute: typeof AuthenticatedAdminProfileRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/registrations': {
+      id: '/_authenticated/admin/registrations'
+      path: '/registrations'
+      fullPath: '/admin/registrations'
+      preLoaderRoute: typeof AuthenticatedAdminRegistrationsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/team': {
       id: '/_authenticated/admin/team'
       path: '/team'
@@ -346,6 +386,8 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminProfileRoute: typeof AuthenticatedAdminProfileRoute
+  AuthenticatedAdminRegistrationsRoute: typeof AuthenticatedAdminRegistrationsRoute
   AuthenticatedAdminTeamRoute: typeof AuthenticatedAdminTeamRoute
   AuthenticatedAdminVerifyRoute: typeof AuthenticatedAdminVerifyRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -355,6 +397,8 @@ interface AuthenticatedAdminRouteChildren {
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminProfileRoute: AuthenticatedAdminProfileRoute,
+  AuthenticatedAdminRegistrationsRoute: AuthenticatedAdminRegistrationsRoute,
   AuthenticatedAdminTeamRoute: AuthenticatedAdminTeamRoute,
   AuthenticatedAdminVerifyRoute: AuthenticatedAdminVerifyRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,

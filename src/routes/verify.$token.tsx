@@ -86,6 +86,8 @@ function VerifyPass() {
         toast.warning(
           `Already checked in${r.checked_in_at ? ` at ${fmtDateTime(r.checked_in_at)}` : ""}`,
         );
+      else if (r?.result === "forbidden")
+        toast.error("You aren't an organiser of this event, so you can't check this pass in.");
       else toast.error("This pass can't be checked in.");
       qc.invalidateQueries({ queryKey: ["verify", token] });
       qc.invalidateQueries({ queryKey: ["registrations"] });
@@ -218,7 +220,11 @@ function VerifyPass() {
           known && (
             <p className="rounded-xl bg-secondary px-4 py-3 text-center text-sm">
               {user ? (
-                "This account doesn't have organiser access, so it can't check passes in."
+                data?.is_organiser ? (
+                  "You're an organiser, but not for this event. Ask its creator to add you under Event organisers to check passes in."
+                ) : (
+                  "This account doesn't have organiser access, so it can't check passes in."
+                )
               ) : (
                 <>
                   Event staff?{" "}

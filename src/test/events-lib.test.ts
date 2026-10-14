@@ -81,7 +81,7 @@ describe("friendlyError", () => {
     expect(friendlyError({ message: "EVENT_LOCKED" })).toMatch(/can't be changed/);
     expect(
       friendlyError({ message: 'new row violates row-level security policy for table "events"' }),
-    ).toMatch(/organiser access/);
+    ).toMatch(/permission to manage/);
   });
 });
 

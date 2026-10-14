@@ -61,6 +61,12 @@ export function registrationState(e: EventRow, now = new Date()): RegState {
   return { open: true, label: "Registration open", tone: "open" };
 }
 
+export const STATUS_LABEL: Record<EventRow["status"], string> = {
+  published: "Upcoming",
+  completed: "Completed",
+  cancelled: "Cancelled",
+};
+
 export function fmtDate(d: string) {
   return new Date(`${d}T00:00:00`).toLocaleDateString("en-IN", {
     weekday: "short",
@@ -108,11 +114,13 @@ export const ADMIN_ERRORS: Record<string, string> = {
   EVENT_HAS_REGISTRATIONS:
     "This event has registrations, so it can't be deleted. Cancel it instead.",
   REGISTRATION_FINAL: "A cancelled registration can't be re-confirmed.",
-  FORBIDDEN: "You don't have organiser access for this action.",
+  FORBIDDEN: "You don't have permission to manage this event or perform this action.",
   USER_NOT_FOUND:
     "No account with that email. Ask them to create an account on the login page first.",
   EMAIL_NOT_CONFIRMED: "That account hasn't confirmed its email address yet.",
   CANNOT_REVOKE_SELF: "You can't remove your own organiser access.",
+  NOT_ORGANISER: "That account isn't an organiser yet. Grant access on the Team page first.",
+  CANNOT_REMOVE_CREATOR: "The organiser who created an event can't be removed from it.",
 };
 
 export function friendlyError(err: { message?: string } | null | undefined) {
