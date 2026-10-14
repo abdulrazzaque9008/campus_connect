@@ -46,8 +46,10 @@ function AdminLayout() {
         {[
           { to: "/admin", label: "Overview" },
           { to: "/admin/events/new", label: "Create event" },
+          { to: "/admin/registrations", label: "Registrations" },
           { to: "/admin/verify", label: "Verify pass" },
           { to: "/admin/team", label: "Team" },
+          { to: "/admin/profile", label: "Profile" },
         ].map((n) => (
           <Link
             key={n.to}

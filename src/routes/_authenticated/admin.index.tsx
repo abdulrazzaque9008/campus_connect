@@ -29,8 +29,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
-import { eventStart, fmtDate, friendlyError, type EventRow } from "@/lib/events";
-import { allEventsQuery } from "@/lib/queries";
+import { STATUS_LABEL, eventStart, fmtDate, friendlyError, type EventRow } from "@/lib/events";
+import { allEventsQuery, managedEventIdsQuery } from "@/lib/queries";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   component: Overview,
@@ -46,7 +46,11 @@ const COLORS = [
 
 function Overview() {
   const qc = useQueryClient();
-  const { data: events, isLoading, error } = useQuery(allEventsQuery);
+  const { data: allEvents, isLoading, error } = useQuery(allEventsQuery);
+  const managed = useQuery(managedEventIdsQuery);
+  // Only events this organiser manages (created, co-organised, or unowned samples).
+  const events =
+    allEvents && managed.data ? allEvents.filter((e) => managed.data.has(e.id)) : undefined;
   // Aggregated in the database so the numbers are exact, not capped by the API row limit.
   const { data: depts, error: deptError } = useQuery({
     queryKey: ["admin", "dept-breakdown"],
@@ -92,13 +96,30 @@ function Overview() {
     qc.invalidateQueries({ queryKey: ["events"] });
   }
 
-  if (error)
+  async function removeSamples(samples: EventRow[]): Promise<void> {
+    let removed = 0;
+    for (const e of samples) {
+      const { data } = await supabase.from("events").delete().eq("id", e.id).select("id");
+      if (data?.length) removed++;
+    }
+    const kept = samples.length - removed;
+    if (removed) toast.success(`Removed ${removed} sample event${removed === 1 ? "" : "s"}`);
+    if (kept)
+      toast.info(
+        `${kept} sample event${kept === 1 ? " has" : "s have"} registrations and ${kept === 1 ? "was" : "were"} kept — cancel ${kept === 1 ? "it" : "them"} instead.`,
+      );
+    qc.invalidateQueries({ queryKey: ["events"] });
+  }
+
+  if (error || managed.error)
     return (
       <p className="rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-destructive">
-        Couldn't load events: {friendlyError(error)}
+        Couldn't load events: {friendlyError(error ?? managed.error)}
       </p>
     );
-  if (isLoading || !events) return <div className="h-64 animate-pulse rounded-2xl bg-muted" />;
+  if (isLoading || managed.isLoading || !events)
+    return <div className="h-64 animate-pulse rounded-2xl bg-muted" />;
+  const samples = events.filter((e) => e.is_sample);
 
   const now = new Date();
   const upcoming = events.filter((e) => e.status === "published" && eventStart(e) > now);
@@ -200,9 +221,43 @@ function Overview() {
         </div>
       </div>
 
+      {samples.length > 0 && (
+        <div className="flex flex-col gap-3 rounded-2xl border border-warning/50 bg-warning/10 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm">
+            <strong>
+              {samples.length} sample event{samples.length === 1 ? " is" : "s are"}
+            </strong>{" "}
+            still listed publicly (marked "Sample"). Remove them once your real events are
+            published.
+          </p>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                Remove sample events
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Remove sample events?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Sample events nobody has registered for are deleted permanently. Any sample event
+                  with registrations is kept so those records are not lost.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Keep them</AlertDialogCancel>
+                <AlertDialogAction onClick={() => removeSamples(samples)}>
+                  Remove samples
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      )}
+
       <div>
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-bold">Manage events</h2>
+          <h2 className="text-xl font-bold">Events you manage</h2>
           <Button asChild>
             <Link to="/admin/events/new">Create event</Link>
           </Button>
@@ -253,7 +308,7 @@ function Overview() {
                             : "default"
                       }
                     >
-                      {e.status}
+                      {STATUS_LABEL[e.status]}
                     </Badge>
                   </td>
                   <td className="p-3">

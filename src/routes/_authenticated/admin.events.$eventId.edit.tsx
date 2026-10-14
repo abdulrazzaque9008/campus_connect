@@ -4,7 +4,7 @@ import { ArrowLeft, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EventForm } from "@/components/event-form";
 import { isUuid } from "@/lib/events";
-import { eventQuery } from "@/lib/queries";
+import { eventQuery, managedEventIdsQuery } from "@/lib/queries";
 
 export const Route = createFileRoute("/_authenticated/admin/events/$eventId/edit")({
   component: EditEvent,
@@ -16,8 +16,24 @@ function EditEvent() {
   const qc = useQueryClient();
   const valid = isUuid(eventId);
   const { data, isLoading, error } = useQuery({ ...eventQuery(eventId), enabled: valid });
-  if (valid && isLoading) return <div className="h-96 animate-pulse rounded-2xl bg-muted" />;
-  if (error) return <p className="text-destructive">Couldn't load this event. Please refresh.</p>;
+  const managed = useQuery(managedEventIdsQuery);
+  if (valid && (isLoading || managed.isLoading))
+    return <div className="h-96 animate-pulse rounded-2xl bg-muted" />;
+  if (error || managed.error)
+    return <p className="text-destructive">Couldn't load this event. Please refresh.</p>;
+  if (data && !managed.data?.has(data.id))
+    return (
+      <div className="rounded-2xl border bg-card p-10 text-center">
+        <Lock className="mx-auto size-8 text-muted-foreground" />
+        <p className="mt-3 font-semibold">You don't manage this event</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Only the event's organisers can edit it. Ask its creator to add you as an organiser.
+        </p>
+        <Button asChild className="mt-4" variant="outline">
+          <Link to="/admin">Back to dashboard</Link>
+        </Button>
+      </div>
+    );
   if (!valid || !data)
     return (
       <div className="rounded-2xl border bg-card p-10 text-center">

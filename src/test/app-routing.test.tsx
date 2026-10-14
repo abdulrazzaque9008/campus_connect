@@ -33,6 +33,8 @@ describe("App routing", () => {
     ],
     ["/admin/verify", "/_authenticated/admin/verify"],
     ["/admin/team", "/_authenticated/admin/team"],
+    ["/admin/registrations", "/_authenticated/admin/registrations"],
+    ["/admin/profile", "/_authenticated/admin/profile"],
   ])("matches %s", (path, routeId) => {
     const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
     expect(router.matchRoutes(path).at(-1)?.routeId).toBe(routeId);

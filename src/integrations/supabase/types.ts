@@ -29,6 +29,35 @@ export type Database = {
         }
         Relationships: []
       }
+      event_organisers: {
+        Row: {
+          added_at: string
+          added_by: string | null
+          event_id: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string
+          added_by?: string | null
+          event_id: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string
+          added_by?: string | null
+          event_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_organisers_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           capacity: number
@@ -195,6 +224,33 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_event_staff: { Args: { _email: string; _event_id: string }; Returns: string }
+      can_manage_event: { Args: { _event_id: string }; Returns: boolean }
+      list_event_staff: {
+        Args: { _event_id: string }
+        Returns: {
+          email: string
+          full_name: string | null
+          is_creator: boolean
+          user_id: string
+        }[]
+      }
+      my_managed_event_ids: { Args: never; Returns: string[] }
+      my_organiser_stats: {
+        Args: never
+        Returns: {
+          cancelled: number
+          checked_in: number
+          completed: number
+          events_created: number
+          events_managed: number
+          past_unclosed: number
+          registrations: number
+          upcoming: number
+        }[]
+      }
+      remove_event_staff: { Args: { _event_id: string; _user_id: string }; Returns: undefined }
+      update_my_profile: { Args: { _full_name: string }; Returns: string }
       bootstrap_organiser: { Args: { _email: string }; Returns: string }
       check_in_pass: {
         Args: { _token: string }
@@ -276,6 +332,7 @@ export type Database = {
           end_time: string | null
           event_date: string | null
           event_title: string | null
+          is_organiser: boolean
           is_staff: boolean
           registration_code: string | null
           result: string

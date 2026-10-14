@@ -218,6 +218,90 @@ select t.expect_error($$select public.register_for_event((select id from public.
 select t.expect_error($$select public.register_for_event('00000000-0000-0000-0000-000000000000', 'Late Person', '2023IT1051', 'Civil Engineering')$$, 'EVENT_NOT_FOUND');
 reset role;
 
+-- per-event permissions (migration 0002) ----------------------------------------
+insert into auth.users (email, email_confirmed_at) values ('second@example.edu', now());
+select t.put('org2', (select id::text from auth.users where email = 'second@example.edu'));
+select public.bootstrap_organiser('second@example.edu');
+
+set role authenticated;
+select set_config('request.jwt.claim.sub', t.get('org'), false);
+insert into public.events (title, club_name, description, event_date, start_time, end_time, venue, category, capacity, registration_deadline)
+  values ('Owned Event', 'Club', 'Ten chars plus', current_date + 12, '10:00', '12:00', 'Hall', 'Technical', 10, now() + interval '2 days');
+select t.put('own', (select id::text from public.events where title = 'Owned Event'));
+select t.ok(exists (select 1 from public.event_organisers where event_id = t.get('own')::uuid and user_id = auth.uid()),
+  'creator becomes the event''s first organiser');
+set role anon;
+select set_config('request.jwt.claim.sub', '', false);
+select t.put('owntok', (select token from public.register_for_event(t.get('own')::uuid, 'Kiran Rao', '2023IT3001', 'Computer Science')));
+
+set role authenticated;
+select set_config('request.jwt.claim.sub', t.get('org2'), false);
+select t.ok((select count(*) from public.registrations where event_id = t.get('own')::uuid) = 0,
+  'another organiser cannot read registrations of an event they don''t manage');
+update public.events set title = 'Hijacked' where id = t.get('own')::uuid;
+select t.ok((select title from public.events where id = t.get('own')::uuid) = 'Owned Event',
+  'another organiser cannot edit an event they don''t manage');
+select t.ok((select not is_staff and is_organiser and student_name = 'Kiran R.' and department is null
+  from public.verify_pass(t.get('owntok'))), 'verify shows only the public view to non-staff organisers');
+select t.ok((select result from public.check_in_pass(t.get('owntok'))) = 'forbidden',
+  'another organiser cannot check in passes for an event they don''t manage');
+select t.expect_error($$select public.list_event_staff(t.get('own')::uuid)$$, 'FORBIDDEN');
+select t.expect_error($$select public.add_event_staff(t.get('own')::uuid, 'second@example.edu')$$, 'FORBIDDEN');
+select t.ok(not exists (select 1 from public.my_managed_event_ids() id where id = t.get('own')::uuid),
+  'managed-event list excludes other organisers'' events');
+select t.ok(not exists (select 1 from public.event_attendance_counts() where event_id = t.get('own')::uuid)
+  and (select coalesce(sum(registrations), 0) from public.registration_department_breakdown())
+      = (select count(*) from public.registrations where status = 'confirmed'),
+  'dashboard aggregates only count managed events');
+update public.events set capacity = 130 where title = 'Hackathon 2026';
+select t.ok((select capacity from public.events where title = 'Hackathon 2026') = 130,
+  'unowned (sample) events stay manageable by any organiser');
+
+select set_config('request.jwt.claim.sub', t.get('org'), false);
+select t.expect_error($$select public.add_event_staff(t.get('own')::uuid, 'student@example.edu')$$, 'NOT_ORGANISER');
+select t.expect_error($$select public.add_event_staff(t.get('own')::uuid, 'nobody@example.edu')$$, 'USER_NOT_FOUND');
+select public.add_event_staff(t.get('own')::uuid, 'SECOND@example.edu');
+select t.ok((select count(*) from public.list_event_staff(t.get('own')::uuid)) = 2, 'co-organiser added');
+select t.expect_error($$select public.remove_event_staff(t.get('own')::uuid, auth.uid())$$, 'CANNOT_REMOVE_CREATOR');
+
+select set_config('request.jwt.claim.sub', t.get('org2'), false);
+select t.ok((select count(*) from public.registrations where event_id = t.get('own')::uuid) = 1,
+  'co-organiser can read the event''s registrations');
+select t.ok((select result from public.check_in_pass(t.get('owntok'))) = 'checked_in', 'co-organiser can check in');
+select set_config('request.jwt.claim.sub', t.get('org'), false);
+select public.remove_event_staff(t.get('own')::uuid, t.get('org2')::uuid);
+select set_config('request.jwt.claim.sub', t.get('org2'), false);
+select t.ok((select count(*) from public.registrations where event_id = t.get('own')::uuid) = 0,
+  'removed co-organiser loses access');
+
+-- an event whose organisers all lost access is not orphaned
+reset role;
+delete from public.user_roles where user_id = t.get('org')::uuid;
+set role authenticated;
+select t.ok(public.can_manage_event(t.get('own')::uuid), 'events with no active organiser fall back to any organiser');
+reset role;
+select public.bootstrap_organiser('first@example.edu');
+
+-- profile --------------------------------------------------------------------
+set role anon;
+select set_config('request.jwt.claim.sub', '', false);
+select t.expect_error($$select public.update_my_profile('Anon Person')$$, 'permission denied');
+set role authenticated;
+select set_config('request.jwt.claim.sub', t.get('org'), false);
+select t.ok(public.update_my_profile('  Dr.   Meera   Joshi ') = 'Dr. Meera Joshi', 'organiser can edit their name');
+select t.ok((select full_name from public.profiles where id = auth.uid()) = 'Dr. Meera Joshi', 'profile name saved');
+select t.expect_error($$select public.update_my_profile('x')$$, 'INVALID_NAME');
+select t.expect_error($$update public.profiles set full_name = 'Direct' where id = auth.uid()$$, 'permission denied');
+select t.ok((select count(*) from public.profiles) = 1, 'organiser can only read their own profile');
+select t.ok((select events_created from public.my_organiser_stats()) =
+  (select count(*) from public.events where created_by = auth.uid()), 'profile stats count events created');
+select t.ok((select registrations from public.my_organiser_stats()) =
+  (select sum(confirmed_count) from public.events where id in (select public.my_managed_event_ids())),
+  'profile stats count registrations across managed events');
+select set_config('request.jwt.claim.sub', t.get('stu'), false);
+select t.expect_error($$select public.my_organiser_stats()$$, 'FORBIDDEN');
+reset role;
+
 -- event for the concurrency tests in run.sh
 insert into public.events (title, club_name, description, event_date, start_time, end_time, venue, category, capacity, registration_deadline)
   values ('Race test', 'Club', 'Ten chars plus', current_date + 10, '10:00', '12:00', 'Hall', 'Technical', 5, now() + interval '1 day');

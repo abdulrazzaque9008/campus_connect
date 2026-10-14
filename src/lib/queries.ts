@@ -54,3 +54,13 @@ export const prnRuleQuery = queryOptions({
   },
   staleTime: 5 * 60_000,
 });
+
+// Events the signed-in organiser may manage (created, co-organised or unowned).
+export const managedEventIdsQuery = queryOptions({
+  queryKey: ["events", "managed-ids"],
+  queryFn: async () => {
+    const { data, error } = await supabase.rpc("my_managed_event_ids");
+    if (error) throw error;
+    return new Set<string>(data ?? []);
+  },
+});
