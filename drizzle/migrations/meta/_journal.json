@@ -8,6 +8,13 @@
       "when": 1791719970318,
       "tag": "0000_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791979200000,
+      "tag": "0001_campusconnect_completion",
+      "breakpoints": true
     }
   ]
 }

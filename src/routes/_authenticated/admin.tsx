@@ -5,7 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: async ({ context }) => {
-    const { data } = await supabase.rpc("has_role", { _user_id: context.user.id, _role: "organiser" });
+    const { data } = await supabase.rpc("has_role", {
+      _user_id: context.user.id,
+      _role: "organiser",
+    });
     return { isOrganiser: !!data };
   },
   head: () => ({
@@ -28,9 +31,13 @@ function AdminLayout() {
         <ShieldAlert className="mx-auto size-12 text-destructive" />
         <h1 className="mt-4 text-2xl font-bold">Organiser access required</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          You're signed in as {user.email}, but this account isn't an organiser yet. Ask an existing organiser to grant you access.
+          You're signed in as {user.email}, but this account isn't an organiser yet. Ask an existing
+          organiser to add you on their Team page. (Setting up a brand-new deployment? See "Initial
+          organiser setup" in the README.)
         </p>
-        <Button asChild className="mt-6"><Link to="/events">Browse events</Link></Button>
+        <Button asChild className="mt-6">
+          <Link to="/events">Browse events</Link>
+        </Button>
       </div>
     );
   return (
@@ -40,6 +47,7 @@ function AdminLayout() {
           { to: "/admin", label: "Overview" },
           { to: "/admin/events/new", label: "Create event" },
           { to: "/admin/verify", label: "Verify pass" },
+          { to: "/admin/team", label: "Team" },
         ].map((n) => (
           <Link
             key={n.to}

@@ -14,14 +14,19 @@ type Search = { q?: string | undefined; category?: Category | undefined };
 export const Route = createFileRoute("/events/")({
   validateSearch: (s: Record<string, unknown>): Search => ({
     q: typeof s["q"] === "string" && s["q"] ? s["q"] : undefined,
-    category: CATEGORIES.includes(s["category"] as Category) ? (s["category"] as Category) : undefined,
+    category: CATEGORIES.includes(s["category"] as Category)
+      ? (s["category"] as Category)
+      : undefined,
   }),
   head: () => ({
     meta: [
       { title: "Explore Events – CampusConnect" },
       { name: "description", content: "Search and filter every upcoming club event at JNEC." },
       { property: "og:title", content: "Explore Events – CampusConnect" },
-      { property: "og:description", content: "Search and filter every upcoming club event at JNEC." },
+      {
+        property: "og:description",
+        content: "Search and filter every upcoming club event at JNEC.",
+      },
     ],
   }),
   component: Explore,
@@ -72,7 +77,9 @@ function Explore() {
               onClick={() => set({ category: c })}
               className={cn(
                 "rounded-full border px-4 py-2 text-sm font-medium transition-colors",
-                category === c ? "border-primary bg-primary text-primary-foreground" : "bg-card hover:border-primary/40",
+                category === c
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "bg-card hover:border-primary/40",
               )}
             >
               {c ?? "All"}
@@ -91,23 +98,40 @@ function Explore() {
           <EventGridSkeleton n={6} />
         ) : error ? (
           <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-destructive">
-            Couldn't load events. <Button variant="link" onClick={() => refetch()}>Try again</Button>
+            Couldn't load events.{" "}
+            <Button variant="link" onClick={() => refetch()}>
+              Try again
+            </Button>
           </div>
         ) : filtered.length === 0 ? (
           <div className="rounded-2xl border bg-card p-12 text-center">
             <p className="text-lg font-semibold">No events match your filters</p>
-            <p className="mt-1 text-sm text-muted-foreground">Try a different search term or category.</p>
-            <Button className="mt-4" variant="outline" onClick={() => set({ q: undefined, category: undefined })}>Clear filters</Button>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Try a different search term or category.
+            </p>
+            <Button
+              className="mt-4"
+              variant="outline"
+              onClick={() => set({ q: undefined, category: undefined })}
+            >
+              Clear filters
+            </Button>
           </div>
         ) : (
           <>
-            <p className="mb-4 text-sm text-muted-foreground">{filtered.length} event{filtered.length > 1 ? "s" : ""}</p>
+            <p className="mb-4 text-sm text-muted-foreground">
+              {filtered.length} event{filtered.length > 1 ? "s" : ""}
+            </p>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {filtered.slice(0, limit).map((e) => <EventCard key={e.id} event={e} />)}
+              {filtered.slice(0, limit).map((e) => (
+                <EventCard key={e.id} event={e} />
+              ))}
             </div>
             {filtered.length > limit && (
               <div className="mt-8 text-center">
-                <Button variant="outline" onClick={() => setLimit(limit + PAGE)}>Load more</Button>
+                <Button variant="outline" onClick={() => setLimit(limit + PAGE)}>
+                  Load more
+                </Button>
               </div>
             )}
           </>

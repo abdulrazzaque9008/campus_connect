@@ -3,7 +3,15 @@ import { Calendar, MapPin, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { coverFor, fmtDate, fmtTime, registrationState, seatsLeft, type EventRow, type RegState } from "@/lib/events";
+import {
+  coverFor,
+  fmtDate,
+  fmtTime,
+  registrationState,
+  seatsLeft,
+  type EventRow,
+  type RegState,
+} from "@/lib/events";
 
 export function StatusPill({ state, className }: { state: RegState; className?: string }) {
   const tone = {
@@ -13,7 +21,11 @@ export function StatusPill({ state, className }: { state: RegState; className?: 
     closed: "bg-muted text-muted-foreground",
     cancelled: "bg-destructive/10 text-destructive",
   }[state.tone];
-  return <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", tone, className)}>{state.label}</span>;
+  return (
+    <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", tone, className)}>
+      {state.label}
+    </span>
+  );
 }
 
 export function EventCard({ event }: { event: EventRow }) {
@@ -29,7 +41,9 @@ export function EventCard({ event }: { event: EventRow }) {
           height={720}
           className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
-        <Badge className="absolute left-3 top-3 bg-background/90 text-primary hover:bg-background/90">{event.category}</Badge>
+        <Badge className="absolute left-3 top-3 bg-background/90 text-primary hover:bg-background/90">
+          {event.category}
+        </Badge>
         {event.is_sample && (
           <span className="absolute right-3 top-3 rounded-full bg-primary/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary-foreground">
             Sample
@@ -38,18 +52,27 @@ export function EventCard({ event }: { event: EventRow }) {
       </div>
       <div className="flex flex-1 flex-col gap-3 p-5">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-accent">{event.club_name}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-accent">
+            {event.club_name}
+          </p>
           <h3 className="mt-1 line-clamp-2 text-lg font-bold leading-snug">{event.title}</h3>
+          {event.short_description && (
+            <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+              {event.short_description}
+            </p>
+          )}
         </div>
         <ul className="space-y-1.5 text-sm text-muted-foreground">
           <li className="flex items-center gap-2">
-            <Calendar className="size-4 shrink-0" /> {fmtDate(event.event_date)} · {fmtTime(event.start_time)}
+            <Calendar className="size-4 shrink-0" /> {fmtDate(event.event_date)} ·{" "}
+            {fmtTime(event.start_time)}
           </li>
           <li className="flex items-center gap-2">
             <MapPin className="size-4 shrink-0" /> <span className="truncate">{event.venue}</span>
           </li>
           <li className="flex items-center gap-2">
-            <Users className="size-4 shrink-0" /> {seatsLeft(event)} of {event.capacity} seats available
+            <Users className="size-4 shrink-0" /> {seatsLeft(event)} of {event.capacity} seats
+            available
           </li>
         </ul>
         <div className="mt-auto flex items-center justify-between gap-2 pt-2">

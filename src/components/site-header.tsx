@@ -57,11 +57,19 @@ export function SiteHeader() {
             </Button>
           ) : (
             <Button asChild size="sm">
-              <Link to="/auth" search={{ redirect: undefined }}>Organiser login</Link>
+              <Link to="/auth" search={{ redirect: undefined }}>
+                Organiser login
+              </Link>
             </Button>
           )}
         </div>
-        <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setOpen(!open)} aria-label="Menu">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="lg:hidden"
+          onClick={() => setOpen(!open)}
+          aria-label="Menu"
+        >
           {open ? <X /> : <Menu />}
         </Button>
       </div>
@@ -108,13 +116,23 @@ export function SiteFooter() {
           </p>
         </div>
         <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
-          <Link to="/events" className="hover:text-primary">Explore events</Link>
-          <Link to="/categories" className="hover:text-primary">Categories</Link>
-          <Link to="/my-passes" className="hover:text-primary">My passes</Link>
-          <Link to="/admin" className="hover:text-primary">Organisers</Link>
+          <Link to="/events" className="hover:text-primary">
+            Explore events
+          </Link>
+          <Link to="/categories" className="hover:text-primary">
+            Categories
+          </Link>
+          <Link to="/my-passes" className="hover:text-primary">
+            My passes
+          </Link>
+          <Link to="/admin" className="hover:text-primary">
+            Organisers
+          </Link>
         </div>
       </div>
-      <p className="pb-6 text-center text-xs text-muted-foreground">© {new Date().getFullYear()} CampusConnect · JNEC</p>
+      <p className="pb-6 text-center text-xs text-muted-foreground">
+        © {new Date().getFullYear()} CampusConnect · JNEC
+      </p>
     </footer>
   );
 }

@@ -99,8 +99,10 @@
   --chart-3: oklch(0.7 0.12 230);
   --chart-4: oklch(0.75 0.15 70);
   --chart-5: oklch(0.6 0.14 155);
-  --shadow-card: 0 1px 2px oklch(0.29 0.09 266 / 0.06), 0 8px 24px -12px oklch(0.29 0.09 266 / 0.18);
-  --shadow-lift: 0 2px 4px oklch(0.29 0.09 266 / 0.08), 0 20px 40px -16px oklch(0.29 0.09 266 / 0.28);
+  --shadow-card:
+    0 1px 2px oklch(0.29 0.09 266 / 0.06), 0 8px 24px -12px oklch(0.29 0.09 266 / 0.18);
+  --shadow-lift:
+    0 2px 4px oklch(0.29 0.09 266 / 0.08), 0 20px 40px -16px oklch(0.29 0.09 266 / 0.28);
   --sidebar: oklch(0.98 0.005 270);
   --sidebar-foreground: oklch(0.22 0.06 268);
   --sidebar-primary: oklch(0.29 0.09 266);
@@ -125,10 +127,17 @@
 
 @utility card-lift {
   box-shadow: var(--shadow-card);
-  transition: box-shadow 200ms ease, transform 200ms ease;
-  &:hover { box-shadow: var(--shadow-lift); transform: translateY(-2px); }
+  transition:
+    box-shadow 200ms ease,
+    transform 200ms ease;
+  &:hover {
+    box-shadow: var(--shadow-lift);
+    transform: translateY(-2px);
+  }
 }
 
 @media print {
-  .no-print { display: none !important; }
+  .no-print {
+    display: none !important;
+  }
 }
