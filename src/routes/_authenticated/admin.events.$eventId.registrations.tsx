@@ -6,9 +6,24 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { fmtDate, fmtDateTime, fmtTime, friendlyError, isUuid, seatsLeft, slugify, toCsv } from "@/lib/events";
+import {
+  fmtDate,
+  fmtDateTime,
+  fmtTime,
+  friendlyError,
+  isUuid,
+  seatsLeft,
+  slugify,
+  toCsv,
+} from "@/lib/events";
 import { eventQuery } from "@/lib/queries";
 
 export const Route = createFileRoute("/_authenticated/admin/events/$eventId/registrations")({
@@ -65,7 +80,9 @@ function Registrations() {
           (attendance === "cancelled" && r.status === "cancelled") ||
           (attendance === "checked_in" && r.status === "confirmed" && !!r.checked_in_at) ||
           (attendance === "not_checked_in" && r.status === "confirmed" && !r.checked_in_at)) &&
-        (!term || r.student_name.toLowerCase().includes(term) || r.prn.toLowerCase().includes(term)),
+        (!term ||
+          r.student_name.toLowerCase().includes(term) ||
+          r.prn.toLowerCase().includes(term)),
     );
   }, [regs, q, dept, attendance]);
   const filtered = !!q.trim() || dept !== "all" || attendance !== "all";
@@ -74,10 +91,12 @@ function Registrations() {
   const visible = rows.slice(current * PAGE_SIZE, (current + 1) * PAGE_SIZE);
   const checkedIn = (regs ?? []).filter((r) => r.status === "confirmed" && r.checked_in_at).length;
 
-  const update = <T,>(fn: (v: T) => void) => (v: T) => {
-    fn(v);
-    setPage(0);
-  };
+  const update =
+    <T,>(fn: (v: T) => void) =>
+    (v: T) => {
+      fn(v);
+      setPage(0);
+    };
   const clear = () => {
     setQ("");
     setDept("all");
@@ -131,7 +150,10 @@ function Registrations() {
 
   return (
     <div>
-      <Link to="/admin" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary">
+      <Link
+        to="/admin"
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"
+      >
         <ArrowLeft className="size-4" /> Dashboard
       </Link>
       <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
@@ -261,11 +283,15 @@ function Registrations() {
                   <td className="whitespace-nowrap p-3">{fmtDateTime(r.registered_at)}</td>
                   <td className="p-3 font-mono">{r.code}</td>
                   <td className="p-3">
-                    <Badge variant={r.status === "confirmed" ? "default" : "destructive"}>{r.status}</Badge>
+                    <Badge variant={r.status === "confirmed" ? "default" : "destructive"}>
+                      {r.status}
+                    </Badge>
                   </td>
                   <td className="whitespace-nowrap p-3">
                     {r.checked_in_at ? (
-                      <span className="font-medium text-success">✓ {fmtDateTime(r.checked_in_at)}</span>
+                      <span className="font-medium text-success">
+                        ✓ {fmtDateTime(r.checked_in_at)}
+                      </span>
                     ) : (
                       <span className="text-muted-foreground">—</span>
                     )}
@@ -278,13 +304,23 @@ function Registrations() {
       </div>
       {pages > 1 && (
         <div className="mt-3 flex items-center justify-end gap-2 text-sm">
-          <Button size="sm" variant="outline" disabled={current === 0} onClick={() => setPage(current - 1)}>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={current === 0}
+            onClick={() => setPage(current - 1)}
+          >
             Previous
           </Button>
           <span className="text-muted-foreground">
             Page {current + 1} of {pages}
           </span>
-          <Button size="sm" variant="outline" disabled={current >= pages - 1} onClick={() => setPage(current + 1)}>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={current >= pages - 1}
+            onClick={() => setPage(current + 1)}
+          >
             Next
           </Button>
         </div>

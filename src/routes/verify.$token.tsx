@@ -20,15 +20,41 @@ export const Route = createFileRoute("/verify/$token")({
   component: VerifyPass,
 });
 
-type Result = "valid" | "checked_in" | "event_cancelled" | "registration_cancelled" | "event_completed" | "invalid";
+type Result =
+  | "valid"
+  | "checked_in"
+  | "event_cancelled"
+  | "registration_cancelled"
+  | "event_completed"
+  | "invalid";
 
 const RESULT_UI: Record<Result, { title: string; detail: string; tone: "ok" | "warn" | "bad" }> = {
-  valid: { title: "Valid Pass", detail: "This entry pass is genuine and has not been used yet.", tone: "ok" },
-  checked_in: { title: "Already Checked In", detail: "This pass has already been used for entry.", tone: "warn" },
+  valid: {
+    title: "Valid Pass",
+    detail: "This entry pass is genuine and has not been used yet.",
+    tone: "ok",
+  },
+  checked_in: {
+    title: "Already Checked In",
+    detail: "This pass has already been used for entry.",
+    tone: "warn",
+  },
   event_cancelled: { title: "Invalid Pass", detail: "This event has been cancelled.", tone: "bad" },
-  registration_cancelled: { title: "Invalid Pass", detail: "This registration was cancelled.", tone: "bad" },
-  event_completed: { title: "Event Ended", detail: "This event is over — the pass can no longer be used.", tone: "bad" },
-  invalid: { title: "Invalid Pass", detail: "This pass could not be verified. It may be mistyped or fake.", tone: "bad" },
+  registration_cancelled: {
+    title: "Invalid Pass",
+    detail: "This registration was cancelled.",
+    tone: "bad",
+  },
+  event_completed: {
+    title: "Event Ended",
+    detail: "This event is over — the pass can no longer be used.",
+    tone: "bad",
+  },
+  invalid: {
+    title: "Invalid Pass",
+    detail: "This pass could not be verified. It may be mistyped or fake.",
+    tone: "bad",
+  },
 };
 
 function VerifyPass() {
@@ -57,7 +83,9 @@ function VerifyPass() {
     onSuccess: (r) => {
       if (r?.result === "checked_in") toast.success(`Checked in ${r.student_name ?? ""}`.trim());
       else if (r?.result === "already_checked_in")
-        toast.warning(`Already checked in${r.checked_in_at ? ` at ${fmtDateTime(r.checked_in_at)}` : ""}`);
+        toast.warning(
+          `Already checked in${r.checked_in_at ? ` at ${fmtDateTime(r.checked_in_at)}` : ""}`,
+        );
       else toast.error("This pass can't be checked in.");
       qc.invalidateQueries({ queryKey: ["verify", token] });
       qc.invalidateQueries({ queryKey: ["registrations"] });
@@ -147,7 +175,9 @@ function VerifyPass() {
           </div>
           <div>
             <dt className="text-muted-foreground">Attendance</dt>
-            <dd className="font-semibold">{data.checked_in_at ? "Checked in" : "Not checked in"}</dd>
+            <dd className="font-semibold">
+              {data.checked_in_at ? "Checked in" : "Not checked in"}
+            </dd>
           </div>
           {staff && (
             <>
@@ -174,7 +204,8 @@ function VerifyPass() {
                 onClick={() => checkIn.mutate()}
                 disabled={checkIn.isPending}
               >
-                {checkIn.isPending ? <Loader2 className="animate-spin" /> : <ShieldCheck />} Check in attendee
+                {checkIn.isPending ? <Loader2 className="animate-spin" /> : <ShieldCheck />} Check
+                in attendee
               </Button>
             )}
             <Button asChild variant="outline" className="w-full">

@@ -1,13 +1,32 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CalendarCheck, CalendarClock, ScanLine, Ticket, Users } from "lucide-react";
-import { Bar, BarChart, CartesianGrid, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Cell } from "recharts";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Legend,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+  Cell,
+} from "recharts";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
-  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { eventStart, fmtDate, friendlyError, type EventRow } from "@/lib/events";
@@ -17,7 +36,13 @@ export const Route = createFileRoute("/_authenticated/admin/")({
   component: Overview,
 });
 
-const COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--chart-5)"];
+const COLORS = [
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+];
 
 function Overview() {
   const qc = useQueryClient();
@@ -36,12 +61,19 @@ function Overview() {
     queryFn: async () => {
       const { data, error } = await supabase.rpc("event_attendance_counts");
       if (error) throw error;
-      return Object.fromEntries(data.map((r) => [r.event_id, Number(r.checked_in)])) as Record<string, number>;
+      return Object.fromEntries(data.map((r) => [r.event_id, Number(r.checked_in)])) as Record<
+        string,
+        number
+      >;
     },
   });
 
   async function setStatus(e: EventRow, status: "cancelled" | "completed"): Promise<void> {
-    const { data, error } = await supabase.from("events").update({ status }).eq("id", e.id).select("id");
+    const { data, error } = await supabase
+      .from("events")
+      .update({ status })
+      .eq("id", e.id)
+      .select("id");
     if (error || !data?.length) {
       toast.error(friendlyError(error ?? { message: "FORBIDDEN" }));
       return;
@@ -73,7 +105,11 @@ function Overview() {
   const stats = [
     { label: "Total events", value: events.length, icon: CalendarCheck },
     { label: "Upcoming events", value: upcoming.length, icon: CalendarClock },
-    { label: "Confirmed registrations", value: events.reduce((s, e) => s + e.confirmed_count, 0), icon: Users },
+    {
+      label: "Confirmed registrations",
+      value: events.reduce((s, e) => s + e.confirmed_count, 0),
+      icon: Users,
+    },
     {
       label: "Checked in",
       value: attendance ? Object.values(attendance).reduce((s, n) => s + n, 0) : "…",
@@ -81,14 +117,19 @@ function Overview() {
     },
     {
       label: "Events full",
-      value: events.filter((e) => e.status === "published" && e.confirmed_count >= e.capacity).length,
+      value: events.filter((e) => e.status === "published" && e.confirmed_count >= e.capacity)
+        .length,
       icon: Ticket,
     },
   ];
   const chart = events
     .filter((e) => e.status !== "cancelled")
     .slice(0, 10)
-    .map((e) => ({ name: e.title.length > 18 ? e.title.slice(0, 17) + "…" : e.title, Registered: e.confirmed_count, Capacity: e.capacity }));
+    .map((e) => ({
+      name: e.title.length > 18 ? e.title.slice(0, 17) + "…" : e.title,
+      Registered: e.confirmed_count,
+      Capacity: e.capacity,
+    }));
 
   return (
     <div className="space-y-10">
@@ -112,7 +153,14 @@ function Overview() {
             <ResponsiveContainer>
               <BarChart data={chart}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={60} />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fontSize: 11 }}
+                  interval={0}
+                  angle={-20}
+                  textAnchor="end"
+                  height={60}
+                />
                 <YAxis tick={{ fontSize: 11 }} />
                 <Tooltip />
                 <Legend />
@@ -130,8 +178,16 @@ function Overview() {
             <div className="mt-4 h-72">
               <ResponsiveContainer>
                 <PieChart>
-                  <Pie data={depts} dataKey="value" nameKey="name" innerRadius={50} outerRadius={90}>
-                    {depts.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length] ?? "var(--chart-1)"} />)}
+                  <Pie
+                    data={depts}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={50}
+                    outerRadius={90}
+                  >
+                    {depts.map((_, i) => (
+                      <Cell key={i} fill={COLORS[i % COLORS.length] ?? "var(--chart-1)"} />
+                    ))}
                   </Pie>
                   <Tooltip />
                   <Legend wrapperStyle={{ fontSize: 12 }} />
@@ -147,14 +203,20 @@ function Overview() {
       <div>
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold">Manage events</h2>
-          <Button asChild><Link to="/admin/events/new">Create event</Link></Button>
-          
+          <Button asChild>
+            <Link to="/admin/events/new">Create event</Link>
+          </Button>
         </div>
         <div className="mt-4 overflow-x-auto rounded-2xl border bg-card shadow-card">
           <table className="w-full text-sm">
             <thead className="bg-muted/60 text-left text-muted-foreground">
               <tr>
-                <th className="p-3">Event</th><th className="p-3">Date</th><th className="p-3">Seats</th><th className="p-3">Checked in</th><th className="p-3">Status</th><th className="p-3 text-right">Actions</th>
+                <th className="p-3">Event</th>
+                <th className="p-3">Date</th>
+                <th className="p-3">Seats</th>
+                <th className="p-3">Checked in</th>
+                <th className="p-3">Status</th>
+                <th className="p-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -169,52 +231,96 @@ function Overview() {
                 <tr key={e.id} className="border-t">
                   <td className="p-3">
                     <p className="font-semibold">{e.title}</p>
-                    <p className="text-xs text-muted-foreground">{e.club_name}{e.is_sample && " · sample"}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {e.club_name}
+                      {e.is_sample && " · sample"}
+                    </p>
                   </td>
                   <td className="whitespace-nowrap p-3">{fmtDate(e.event_date)}</td>
-                  <td className="whitespace-nowrap p-3">{e.confirmed_count}/{e.capacity}</td>
-                  <td className="whitespace-nowrap p-3">{attendance ? (attendance[e.id] ?? 0) : "…"}</td>
+                  <td className="whitespace-nowrap p-3">
+                    {e.confirmed_count}/{e.capacity}
+                  </td>
+                  <td className="whitespace-nowrap p-3">
+                    {attendance ? (attendance[e.id] ?? 0) : "…"}
+                  </td>
                   <td className="p-3">
-                    <Badge variant={e.status === "cancelled" ? "destructive" : e.status === "completed" ? "secondary" : "default"}>{e.status}</Badge>
+                    <Badge
+                      variant={
+                        e.status === "cancelled"
+                          ? "destructive"
+                          : e.status === "completed"
+                            ? "secondary"
+                            : "default"
+                      }
+                    >
+                      {e.status}
+                    </Badge>
                   </td>
                   <td className="p-3">
                     <div className="flex flex-wrap justify-end gap-1">
-                      <Button asChild size="sm" variant="ghost"><Link to="/events/$eventId" params={{ eventId: e.id }}>View</Link></Button>
+                      <Button asChild size="sm" variant="ghost">
+                        <Link to="/events/$eventId" params={{ eventId: e.id }}>
+                          View
+                        </Link>
+                      </Button>
                       {e.status === "published" && (
-                        <Button asChild size="sm" variant="ghost"><Link to="/admin/events/$eventId/edit" params={{ eventId: e.id }}>Edit</Link></Button>
+                        <Button asChild size="sm" variant="ghost">
+                          <Link to="/admin/events/$eventId/edit" params={{ eventId: e.id }}>
+                            Edit
+                          </Link>
+                        </Button>
                       )}
-                      <Button asChild size="sm" variant="outline"><Link to="/admin/events/$eventId/registrations" params={{ eventId: e.id }}>Registrations</Link></Button>
-                      
-                      
+                      <Button asChild size="sm" variant="outline">
+                        <Link to="/admin/events/$eventId/registrations" params={{ eventId: e.id }}>
+                          Registrations
+                        </Link>
+                      </Button>
+
                       {e.status === "published" && (
                         <>
                           <AlertDialog>
-                            <AlertDialogTrigger asChild><Button size="sm" variant="ghost">Complete</Button></AlertDialogTrigger>
+                            <AlertDialogTrigger asChild>
+                              <Button size="sm" variant="ghost">
+                                Complete
+                              </Button>
+                            </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Mark "{e.title}" as completed?</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Registration and check-in will close and the event can no longer be edited. This can't be undone.
+                                  Registration and check-in will close and the event can no longer
+                                  be edited. This can't be undone.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Not yet</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => setStatus(e, "completed")}>Mark completed</AlertDialogAction>
+                                <AlertDialogAction onClick={() => setStatus(e, "completed")}>
+                                  Mark completed
+                                </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
                           <AlertDialog>
-                            <AlertDialogTrigger asChild><Button size="sm" variant="ghost" className="text-destructive">Cancel</Button></AlertDialogTrigger>
+                            <AlertDialogTrigger asChild>
+                              <Button size="sm" variant="ghost" className="text-destructive">
+                                Cancel
+                              </Button>
+                            </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Cancel "{e.title}"?</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Registration will close and existing entry passes will be rejected at the door. Registrations are kept for your records. This can't be undone.
+                                  Registration will close and existing entry passes will be rejected
+                                  at the door. Registrations are kept for your records. This can't
+                                  be undone.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Keep event</AlertDialogCancel>
-                                <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => setStatus(e, "cancelled")}>
+                                <AlertDialogAction
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  onClick={() => setStatus(e, "cancelled")}
+                                >
                                   Cancel event
                                 </AlertDialogAction>
                               </AlertDialogFooter>
@@ -224,17 +330,25 @@ function Overview() {
                       )}
                       {e.confirmed_count === 0 && (
                         <AlertDialog>
-                          <AlertDialogTrigger asChild><Button size="sm" variant="ghost" className="text-destructive">Delete</Button></AlertDialogTrigger>
+                          <AlertDialogTrigger asChild>
+                            <Button size="sm" variant="ghost" className="text-destructive">
+                              Delete
+                            </Button>
+                          </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
                               <AlertDialogTitle>Delete "{e.title}"?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                The event is removed permanently. Events that have any registrations can't be deleted — cancel them instead.
+                                The event is removed permanently. Events that have any registrations
+                                can't be deleted — cancel them instead.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Keep event</AlertDialogCancel>
-                              <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => remove(e)}>
+                              <AlertDialogAction
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                onClick={() => remove(e)}
+                              >
                                 Delete event
                               </AlertDialogAction>
                             </AlertDialogFooter>

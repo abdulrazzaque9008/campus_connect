@@ -57,13 +57,19 @@ export function validateEventForm(f: EventFormValues, initial?: EventRow, now = 
   const len = (s: string) => t(s).length;
 
   if (len(f.title) < 3 || len(f.title) > 150) err.title = "Title must be 3–150 characters.";
-  if (len(f.club_name) < 2 || len(f.club_name) > 100) err.club_name = "Organising club must be 2–100 characters.";
-  if (len(f.short_description) > 200) err.short_description = "Keep the short description under 200 characters.";
-  if (len(f.description) < 10 || len(f.description) > 5000) err.description = "Description must be 10–5000 characters.";
+  if (len(f.club_name) < 2 || len(f.club_name) > 100)
+    err.club_name = "Organising club must be 2–100 characters.";
+  if (len(f.short_description) > 200)
+    err.short_description = "Keep the short description under 200 characters.";
+  if (len(f.description) < 10 || len(f.description) > 5000)
+    err.description = "Description must be 10–5000 characters.";
   if (!f.category || !CATEGORIES.includes(f.category)) err.category = "Choose a category.";
   if (len(f.venue) < 2 || len(f.venue) > 150) err.venue = "Venue must be 2–150 characters.";
   if (len(f.contact_info) > 200) err.contact_info = "Keep contact details under 200 characters.";
-  if (t(f.cover_image_url) && (!/^https?:\/\/\S+$/.test(t(f.cover_image_url)) || len(f.cover_image_url) > 1000))
+  if (
+    t(f.cover_image_url) &&
+    (!/^https?:\/\/\S+$/.test(t(f.cover_image_url)) || len(f.cover_image_url) > 1000)
+  )
     err.cover_image_url = "Enter a valid image URL starting with https://.";
 
   const validDate = /^\d{4}-\d{2}-\d{2}$/.test(f.event_date);
@@ -72,12 +78,16 @@ export function validateEventForm(f: EventFormValues, initial?: EventRow, now = 
   if (!validDate) err.event_date = "Date is required.";
   if (!validStart) err.start_time = "Start time is required.";
   if (!validEnd) err.end_time = "End time is required.";
-  else if (validStart && f.end_time <= f.start_time) err.end_time = "End time must be after the start time (same day).";
+  else if (validStart && f.end_time <= f.start_time)
+    err.end_time = "End time must be after the start time (same day).";
 
   const starts = validDate && validStart ? istToDate(f.event_date, f.start_time) : null;
   const scheduleChanged =
-    !initial || f.event_date !== initial.event_date || f.start_time !== initial.start_time.slice(0, 5);
-  if (starts && scheduleChanged && starts < now) err.event_date = "The event must start in the future.";
+    !initial ||
+    f.event_date !== initial.event_date ||
+    f.start_time !== initial.start_time.slice(0, 5);
+  if (starts && scheduleChanged && starts < now)
+    err.event_date = "The event must start in the future.";
 
   const cap = Number(f.capacity);
   if (!/^\d+$/.test(f.capacity.trim()) || !Number.isInteger(cap) || cap < 1 || cap > MAX_CAPACITY)
@@ -89,9 +99,12 @@ export function validateEventForm(f: EventFormValues, initial?: EventRow, now = 
     err.registration_deadline = "Registration deadline is required.";
   } else {
     const deadline = new Date(`${f.registration_deadline}:00+05:30`);
-    const deadlineChanged = !initial || f.registration_deadline !== toIstInput(initial.registration_deadline);
-    if (starts && deadline > starts) err.registration_deadline = "Deadline must be on or before the event start.";
-    else if (deadlineChanged && deadline < now) err.registration_deadline = "Deadline must be in the future.";
+    const deadlineChanged =
+      !initial || f.registration_deadline !== toIstInput(initial.registration_deadline);
+    if (starts && deadline > starts)
+      err.registration_deadline = "Deadline must be on or before the event start.";
+    else if (deadlineChanged && deadline < now)
+      err.registration_deadline = "Deadline must be in the future.";
   }
 
   return err;

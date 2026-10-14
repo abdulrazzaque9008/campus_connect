@@ -73,10 +73,15 @@ function Team() {
     <div className="max-w-2xl">
       <h1 className="text-3xl font-extrabold">Organiser team</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Organisers can create and edit events, see registrations (including PRNs) and check students in. Ask a new
-        organiser to create an account on the login page and confirm their email, then add them here.
+        Organisers can create and edit events, see registrations (including PRNs) and check students
+        in. Ask a new organiser to create an account on the login page and confirm their email, then
+        add them here.
       </p>
-      <form onSubmit={submit} className="mt-6 space-y-2 rounded-2xl border bg-card p-6 shadow-card" noValidate>
+      <form
+        onSubmit={submit}
+        className="mt-6 space-y-2 rounded-2xl border bg-card p-6 shadow-card"
+        noValidate
+      >
         <Label htmlFor="org-email">Grant organiser access</Label>
         <div className="flex gap-2">
           <Input
@@ -100,7 +105,10 @@ function Team() {
         ) : (
           <ul>
             {data?.map((o) => (
-              <li key={o.user_id} className="flex items-center justify-between gap-4 border-t p-4 first:border-t-0">
+              <li
+                key={o.user_id}
+                className="flex items-center justify-between gap-4 border-t p-4 first:border-t-0"
+              >
                 <div className="min-w-0">
                   <p className="truncate font-semibold">{o.full_name || o.email}</p>
                   <p className="truncate text-sm text-muted-foreground">{o.email}</p>
@@ -110,7 +118,12 @@ function Team() {
                 ) : (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button size="sm" variant="ghost" className="text-destructive" disabled={revoke.isPending}>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-destructive"
+                        disabled={revoke.isPending}
+                      >
                         Remove
                       </Button>
                     </AlertDialogTrigger>
@@ -118,8 +131,8 @@ function Team() {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Remove organiser access for {o.email}?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Their account stays, but they will no longer be able to manage events, view registrations
-                          or check students in.
+                          Their account stays, but they will no longer be able to manage events,
+                          view registrations or check students in.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>

@@ -1,6 +1,18 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { csvCell, friendlyError, parsePassToken, toCsv, verifyUrl, type EventRow } from "@/lib/events";
-import { initialValues, toIstInput, validateEventForm, type EventFormValues } from "@/lib/event-validation";
+import {
+  csvCell,
+  friendlyError,
+  parsePassToken,
+  toCsv,
+  verifyUrl,
+  type EventRow,
+} from "@/lib/events";
+import {
+  initialValues,
+  toIstInput,
+  validateEventForm,
+  type EventFormValues,
+} from "@/lib/event-validation";
 
 const TOKEN = "a".repeat(16) + "0123456789abcdef0123456789abcdef";
 
@@ -12,7 +24,7 @@ describe("CSV export", () => {
   });
 
   it("neutralises spreadsheet formulas", () => {
-    for (const evil of ["=HYPERLINK(\"http://x\")", "+1+1", "-2+3", "@SUM(A1)", "\tcmd", "\rcmd"])
+    for (const evil of ['=HYPERLINK("http://x")', "+1+1", "-2+3", "@SUM(A1)", "\tcmd", "\rcmd"])
       expect(csvCell(evil).startsWith("\"'")).toBe(true);
     expect(csvCell("Priya")).toBe('"Priya"');
   });
@@ -67,9 +79,9 @@ describe("friendlyError", () => {
     expect(friendlyError({ message: "EVENT_FULL" })).toMatch(/full/);
     expect(friendlyError({ message: "DEADLINE_AFTER_START" })).toMatch(/before the event starts/);
     expect(friendlyError({ message: "EVENT_LOCKED" })).toMatch(/can't be changed/);
-    expect(friendlyError({ message: 'new row violates row-level security policy for table "events"' })).toMatch(
-      /organiser access/,
-    );
+    expect(
+      friendlyError({ message: 'new row violates row-level security policy for table "events"' }),
+    ).toMatch(/organiser access/);
   });
 });
 
@@ -118,20 +130,29 @@ describe("validateEventForm", () => {
   it("rejects inconsistent times and dates", () => {
     expect(v({ end_time: "09:00" }).end_time).toBeDefined();
     expect(v({ end_time: "10:00" }).end_time).toBeDefined();
-    expect(v({ event_date: "2026-10-01", registration_deadline: "2026-09-30T10:00" }).event_date).toMatch(/future/);
-    expect(v({ registration_deadline: "2026-11-20T10:01" }).registration_deadline).toMatch(/before the event/);
+    expect(
+      v({ event_date: "2026-10-01", registration_deadline: "2026-09-30T10:00" }).event_date,
+    ).toMatch(/future/);
+    expect(v({ registration_deadline: "2026-11-20T10:01" }).registration_deadline).toMatch(
+      /before the event/,
+    );
     expect(v({ registration_deadline: "2026-11-20T10:00" }).registration_deadline).toBeUndefined();
-    expect(v({ registration_deadline: "2026-10-01T10:00" }).registration_deadline).toMatch(/future/);
+    expect(v({ registration_deadline: "2026-10-01T10:00" }).registration_deadline).toMatch(
+      /future/,
+    );
   });
 
   it("rejects invalid capacities", () => {
-    for (const capacity of ["0", "-5", "1.5", "abc", "", "100001"]) expect(v({ capacity }).capacity).toBeDefined();
+    for (const capacity of ["0", "-5", "1.5", "abc", "", "100001"])
+      expect(v({ capacity }).capacity).toBeDefined();
     expect(v({ capacity: "100000" }).capacity).toBeUndefined();
   });
 
   it("validates optional fields", () => {
     expect(v({ cover_image_url: "javascript:alert(1)" }).cover_image_url).toBeDefined();
-    expect(v({ cover_image_url: "https://img.example/banner.jpg" }).cover_image_url).toBeUndefined();
+    expect(
+      v({ cover_image_url: "https://img.example/banner.jpg" }).cover_image_url,
+    ).toBeUndefined();
     expect(v({ short_description: "x".repeat(201) }).short_description).toBeDefined();
   });
 

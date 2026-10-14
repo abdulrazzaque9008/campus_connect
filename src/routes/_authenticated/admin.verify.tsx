@@ -21,7 +21,9 @@ function Verify() {
     e.preventDefault();
     const token = parsePassToken(input);
     if (!token) {
-      setError("That doesn't look like a CampusConnect pass link. Paste the full link from the QR code.");
+      setError(
+        "That doesn't look like a CampusConnect pass link. Paste the full link from the QR code.",
+      );
       return;
     }
     setError("");
@@ -38,9 +40,10 @@ function Verify() {
           <div className="text-sm">
             <p className="font-semibold">At the entrance</p>
             <p className="mt-1 text-muted-foreground">
-              Point your phone's camera (or any QR scanner app) at the student's pass and open the link. Stay signed in
-              on this phone's browser and you'll get a <strong>Check in</strong> button on the verification page.
-              Each pass can only be checked in once.
+              Point your phone's camera (or any QR scanner app) at the student's pass and open the
+              link. Stay signed in on this phone's browser and you'll get a{" "}
+              <strong>Check in</strong> button on the verification page. Each pass can only be
+              checked in once.
             </p>
           </div>
         </div>

@@ -29,17 +29,22 @@ function EditEvent() {
     );
   return (
     <div className="max-w-3xl">
-      <Link to="/admin" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary">
+      <Link
+        to="/admin"
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary"
+      >
         <ArrowLeft className="size-4" /> Dashboard
       </Link>
       <h1 className="mb-6 mt-2 text-3xl font-extrabold">Edit event</h1>
       {data.status !== "published" ? (
         <div className="rounded-2xl border bg-card p-8">
           <Lock className="size-8 text-muted-foreground" />
-          <p className="mt-3 font-semibold">This event is {data.status} and can no longer be edited.</p>
+          <p className="mt-3 font-semibold">
+            This event is {data.status} and can no longer be edited.
+          </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Locking finished and cancelled events keeps every issued entry pass consistent. Registrations remain
-            available for your records.
+            Locking finished and cancelled events keeps every issued entry pass consistent.
+            Registrations remain available for your records.
           </p>
           <Button asChild className="mt-4" variant="outline">
             <Link to="/admin/events/$eventId/registrations" params={{ eventId }}>
@@ -51,8 +56,8 @@ function EditEvent() {
         <>
           {data.confirmed_count > 0 && (
             <p className="mb-4 rounded-xl bg-secondary px-4 py-3 text-sm">
-              {data.confirmed_count} student{data.confirmed_count > 1 ? "s have" : " has"} already registered. Their
-              passes stay valid and will show the updated details.
+              {data.confirmed_count} student{data.confirmed_count > 1 ? "s have" : " has"} already
+              registered. Their passes stay valid and will show the updated details.
             </p>
           )}
           <EventForm

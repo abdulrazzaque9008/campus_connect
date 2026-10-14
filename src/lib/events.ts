@@ -37,7 +37,11 @@ export function eventStart(e: Pick<EventRow, "event_date" | "start_time">) {
   return new Date(`${e.event_date}T${e.start_time}+05:30`);
 }
 
-export type RegState = { open: boolean; label: string; tone: "open" | "full" | "closed" | "cancelled" | "low" };
+export type RegState = {
+  open: boolean;
+  label: string;
+  tone: "open" | "full" | "closed" | "cancelled" | "low";
+};
 
 export function seatsLeft(e: EventRow) {
   return Math.max(0, e.capacity - e.confirmed_count);
@@ -46,12 +50,14 @@ export function seatsLeft(e: EventRow) {
 export function registrationState(e: EventRow, now = new Date()): RegState {
   if (e.status === "cancelled") return { open: false, label: "Cancelled", tone: "cancelled" };
   if (e.status === "completed") return { open: false, label: "Completed", tone: "closed" };
-  if (eventStart(e) < now) return { open: false, label: "Event has started or ended", tone: "closed" };
+  if (eventStart(e) < now)
+    return { open: false, label: "Event has started or ended", tone: "closed" };
   if (e.registration_deadline && new Date(e.registration_deadline) < now)
     return { open: false, label: "Registration closed", tone: "closed" };
   const left = seatsLeft(e);
   if (left <= 0) return { open: false, label: "Event full", tone: "full" };
-  if (left <= Math.max(5, e.capacity * 0.1)) return { open: true, label: `Only ${left} seats left`, tone: "low" };
+  if (left <= Math.max(5, e.capacity * 0.1))
+    return { open: true, label: `Only ${left} seats left`, tone: "low" };
   return { open: true, label: "Registration open", tone: "open" };
 }
 
@@ -99,10 +105,12 @@ export const ADMIN_ERRORS: Record<string, string> = {
   INVALID_SHORT_DESCRIPTION: "The short description can be at most 200 characters.",
   INVALID_CONTACT: "Contact details can be at most 200 characters.",
   INVALID_IMAGE_URL: "The image URL must start with http:// or https://.",
-  EVENT_HAS_REGISTRATIONS: "This event has registrations, so it can't be deleted. Cancel it instead.",
+  EVENT_HAS_REGISTRATIONS:
+    "This event has registrations, so it can't be deleted. Cancel it instead.",
   REGISTRATION_FINAL: "A cancelled registration can't be re-confirmed.",
   FORBIDDEN: "You don't have organiser access for this action.",
-  USER_NOT_FOUND: "No account with that email. Ask them to create an account on the login page first.",
+  USER_NOT_FOUND:
+    "No account with that email. Ask them to create an account on the login page first.",
   EMAIL_NOT_CONFIRMED: "That account hasn't confirmed its email address yet.",
   CANNOT_REVOKE_SELF: "You can't remove your own organiser access.",
 };
@@ -153,7 +161,9 @@ const PASS_KEY = "campusconnect.passes";
 export function savedPassTokens(): string[] {
   try {
     const list: unknown = JSON.parse(localStorage.getItem(PASS_KEY) || "[]");
-    return Array.isArray(list) ? list.filter((t): t is string => typeof t === "string" && TOKEN_RE.test(t)) : [];
+    return Array.isArray(list)
+      ? list.filter((t): t is string => typeof t === "string" && TOKEN_RE.test(t))
+      : [];
   } catch {
     return [];
   }
@@ -185,5 +195,8 @@ export function toCsv(rows: unknown[][]) {
 }
 
 export function slugify(s: string) {
-  return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  return s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 }

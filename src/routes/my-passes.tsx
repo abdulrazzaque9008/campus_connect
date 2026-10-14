@@ -7,15 +7,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { fmtDate, parsePassToken, removePassToken, savePassToken, savedPassTokens } from "@/lib/events";
+import {
+  fmtDate,
+  parsePassToken,
+  removePassToken,
+  savePassToken,
+  savedPassTokens,
+} from "@/lib/events";
 
 export const Route = createFileRoute("/my-passes")({
   head: () => ({
     meta: [
       { title: "My Passes – CampusConnect" },
-      { name: "description", content: "Entry passes for events you registered for on this device." },
+      {
+        name: "description",
+        content: "Entry passes for events you registered for on this device.",
+      },
       { property: "og:title", content: "My Passes – CampusConnect" },
-      { property: "og:description", content: "Entry passes for events you registered for on this device." },
+      {
+        property: "og:description",
+        content: "Entry passes for events you registered for on this device.",
+      },
     ],
   }),
   component: MyPasses,
@@ -54,7 +66,8 @@ function MyPasses() {
         setLinkError("We couldn't find a pass for that link.");
         return;
       }
-      if (!savePassToken(token)) toast.warning("This browser won't let us save passes, but the link still works.");
+      if (!savePassToken(token))
+        toast.warning("This browser won't let us save passes, but the link still works.");
       else toast.success(`Added your pass for ${pass.event_title}`);
       setLink("");
       setLinkError("");
@@ -70,8 +83,9 @@ function MyPasses() {
     <div className="mx-auto max-w-3xl px-4 py-12">
       <h1 className="text-3xl font-extrabold">My passes</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Passes for events you registered for on this device, kept in this browser. For privacy, passes can't be looked
-        up by PRN — keep your pass link safe (use "Copy pass link" on a pass).
+        Passes for events you registered for on this device, kept in this browser. For privacy,
+        passes can't be looked up by PRN — keep your pass link safe (use "Copy pass link" on a
+        pass).
       </p>
       <div className="mt-8 space-y-3">
         {tokens === null || (isLoading && tokens.length) ? (
@@ -96,7 +110,10 @@ function MyPasses() {
           </div>
         ) : (
           data?.map(({ token, pass }) => (
-            <div key={token} className="card-lift flex items-center justify-between gap-4 rounded-2xl border bg-card p-5">
+            <div
+              key={token}
+              className="card-lift flex items-center justify-between gap-4 rounded-2xl border bg-card p-5"
+            >
               {pass ? (
                 <Link to="/pass/$token" params={{ token }} className="min-w-0 flex-1">
                   <p className="truncate font-bold">{pass.event_title}</p>
@@ -130,7 +147,9 @@ function MyPasses() {
               ) : (
                 <div className="min-w-0 flex-1">
                   <p className="font-bold text-muted-foreground">Pass unavailable</p>
-                  <p className="mt-1 text-sm text-muted-foreground">This pass no longer exists. You can remove it.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    This pass no longer exists. You can remove it.
+                  </p>
                 </div>
               )}
               <Button

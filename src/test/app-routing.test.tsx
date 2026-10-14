@@ -23,7 +23,10 @@ describe("App routing", () => {
     ["/my-passes", "/my-passes"],
     ["/admin", "/_authenticated/admin/"],
     ["/admin/events/new", "/_authenticated/admin/events/new"],
-    ["/admin/events/6f1c1a4e-8a51-4c41-9f5a-6d1f2c3b4a5e/edit", "/_authenticated/admin/events/$eventId/edit"],
+    [
+      "/admin/events/6f1c1a4e-8a51-4c41-9f5a-6d1f2c3b4a5e/edit",
+      "/_authenticated/admin/events/$eventId/edit",
+    ],
     [
       "/admin/events/6f1c1a4e-8a51-4c41-9f5a-6d1f2c3b4a5e/registrations",
       "/_authenticated/admin/events/$eventId/registrations",

@@ -22,7 +22,10 @@ export function useIsOrganiser(userId: string | undefined) {
     queryKey: ["is-organiser", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("has_role", { _user_id: userId!, _role: "organiser" });
+      const { data, error } = await supabase.rpc("has_role", {
+        _user_id: userId!,
+        _role: "organiser",
+      });
       if (error) throw error;
       return !!data;
     },

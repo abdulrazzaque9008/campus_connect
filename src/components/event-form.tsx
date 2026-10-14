@@ -5,8 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CATEGORIES, CATEGORY_INFO, friendlyError, type Category, type EventRow } from "@/lib/events";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  CATEGORIES,
+  CATEGORY_INFO,
+  friendlyError,
+  type Category,
+  type EventRow,
+} from "@/lib/events";
 import {
   MAX_CAPACITY,
   initialValues,
@@ -16,7 +28,13 @@ import {
 } from "@/lib/event-validation";
 import { supabase } from "@/integrations/supabase/client";
 
-export function EventForm({ initial, onSaved }: { initial?: EventRow; onSaved: (id: string) => void }) {
+export function EventForm({
+  initial,
+  onSaved,
+}: {
+  initial?: EventRow;
+  onSaved: (id: string) => void;
+}) {
   const [f, setF] = useState<EventFormValues>(() => initialValues(initial));
   const [errors, setErrors] = useState<Partial<Record<keyof EventFormValues, string>>>({});
   const [busy, setBusy] = useState(false);
@@ -47,7 +65,12 @@ export function EventForm({ initial, onSaved }: { initial?: EventRow; onSaved: (
         toast.info("No changes to save.");
         return;
       }
-      res = await supabase.from("events").update(changes).eq("id", initial.id).select("id").maybeSingle();
+      res = await supabase
+        .from("events")
+        .update(changes)
+        .eq("id", initial.id)
+        .select("id")
+        .maybeSingle();
       if (!res.error && !res.data) res = { ...res, error: { message: "FORBIDDEN" } };
     } else {
       res = await supabase.from("events").insert(payload).select("id").single();
@@ -89,7 +112,9 @@ export function EventForm({ initial, onSaved }: { initial?: EventRow; onSaved: (
       noValidate
       className="grid gap-5 rounded-2xl border bg-card p-6 shadow-card md:grid-cols-2"
     >
-      <div className="md:col-span-2">{field("title", "Event title *", input("title", { maxLength: 150 }))}</div>
+      <div className="md:col-span-2">
+        {field("title", "Event title *", input("title", { maxLength: 150 }))}
+      </div>
       {field(
         "club_name",
         "Organising club or department *",
@@ -115,7 +140,10 @@ export function EventForm({ initial, onSaved }: { initial?: EventRow; onSaved: (
         {field(
           "short_description",
           "Short description",
-          input("short_description", { maxLength: 200, placeholder: "One line shown at the top of the event page" }),
+          input("short_description", {
+            maxLength: 200,
+            placeholder: "One line shown at the top of the event page",
+          }),
           `${f.short_description.trim().length}/200`,
         )}
       </div>
@@ -140,7 +168,12 @@ export function EventForm({ initial, onSaved }: { initial?: EventRow; onSaved: (
       {field(
         "capacity",
         "Total seat capacity *",
-        input("capacity", { type: "number", min: initial?.confirmed_count || 1, max: MAX_CAPACITY, inputMode: "numeric" }),
+        input("capacity", {
+          type: "number",
+          min: initial?.confirmed_count || 1,
+          max: MAX_CAPACITY,
+          inputMode: "numeric",
+        }),
         initial?.confirmed_count
           ? `${initial.confirmed_count} seats are already taken — capacity can't go below that.`
           : undefined,
@@ -155,7 +188,10 @@ export function EventForm({ initial, onSaved }: { initial?: EventRow; onSaved: (
         {field(
           "contact_info",
           "Contact / organiser details",
-          input("contact_info", { maxLength: 200, placeholder: "e.g. Riya Patil, events@college.edu" }),
+          input("contact_info", {
+            maxLength: 200,
+            placeholder: "e.g. Riya Patil, events@college.edu",
+          }),
         )}
       </div>
       <div className="grid gap-4 md:col-span-2 md:grid-cols-[1fr_200px]">
@@ -166,7 +202,13 @@ export function EventForm({ initial, onSaved }: { initial?: EventRow; onSaved: (
           "Optional — the category image is used otherwise.",
         )}
         <img
-          src={preview && /^https?:\/\/\S+$/.test(preview) ? preview : f.category ? CATEGORY_INFO[f.category].image : CATEGORY_INFO.Technical.image}
+          src={
+            preview && /^https?:\/\/\S+$/.test(preview)
+              ? preview
+              : f.category
+                ? CATEGORY_INFO[f.category].image
+                : CATEGORY_INFO.Technical.image
+          }
           alt="Banner preview"
           className="aspect-video w-full rounded-xl border object-cover"
         />
