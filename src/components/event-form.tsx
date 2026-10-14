@@ -6,76 +6,52 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CATEGORIES, friendlyError, type Category, type EventRow } from "@/lib/events";
+import { CATEGORIES, CATEGORY_INFO, friendlyError, type Category, type EventRow } from "@/lib/events";
+import {
+  MAX_CAPACITY,
+  initialValues,
+  toPayload,
+  validateEventForm,
+  type EventFormValues,
+} from "@/lib/event-validation";
 import { supabase } from "@/integrations/supabase/client";
 
-function toLocalInput(ts: string | null) {
-  if (!ts) return "";
-  const d = new Date(new Date(ts).getTime() + 5.5 * 3600_000);
-  return d.toISOString().slice(0, 16);
-}
-
 export function EventForm({ initial, onSaved }: { initial?: EventRow; onSaved: (id: string) => void }) {
-  const [f, setF] = useState({
-    title: initial?.title ?? "",
-    club_name: initial?.club_name ?? "",
-    description: initial?.description ?? "",
-    event_date: initial?.event_date ?? "",
-    start_time: initial?.start_time?.slice(0, 5) ?? "",
-    end_time: initial?.end_time?.slice(0, 5) ?? "",
-    venue: initial?.venue ?? "",
-    category: (initial?.category ?? "") as Category | "",
-    capacity: initial ? String(initial.capacity) : "",
-    cover_image_url: initial?.cover_image_url ?? "",
-    registration_deadline: toLocalInput(initial?.registration_deadline ?? null),
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [f, setF] = useState<EventFormValues>(() => initialValues(initial));
+  const [errors, setErrors] = useState<Partial<Record<keyof EventFormValues, string>>>({});
   const [busy, setBusy] = useState(false);
-  const set = (k: keyof typeof f) => (v: string) => setF((p) => ({ ...p, [k]: v }));
+  const set = (k: keyof EventFormValues) => (v: string) => setF((p) => ({ ...p, [k]: v }));
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    const err: Record<string, string> = {};
-    const t = (s: string) => s.trim();
-    if (t(f.title).length < 3) err["title"] = "Title must be at least 3 characters.";
-    if (t(f.club_name).length < 2) err["club_name"] = "Organising club is required.";
-    if (t(f.description).length < 10) err["description"] = "Add a description (10+ characters).";
-    if (!f.event_date) err["event_date"] = "Date is required.";
-    if (!f.start_time) err["start_time"] = "Start time is required.";
-    if (!f.end_time) err["end_time"] = "End time is required.";
-    else if (f.start_time && f.end_time <= f.start_time) err["end_time"] = "End time must be after start time.";
-    if (t(f.venue).length < 2) err["venue"] = "Venue is required.";
-    if (!f.category) err["category"] = "Choose a category.";
-    const cap = Number(f.capacity);
-    if (!Number.isInteger(cap) || cap < 1) err["capacity"] = "Capacity must be a whole number above 0.";
-    else if (initial && cap < initial.confirmed_count)
-      err["capacity"] = `Can't go below the ${initial.confirmed_count} confirmed registrations.`;
-    if (f.cover_image_url && !/^https?:\/\/\S+$/.test(t(f.cover_image_url))) err["cover_image_url"] = "Enter a valid image URL.";
-    if (!f.registration_deadline) err["registration_deadline"] = "Registration deadline is required.";
-    else if (f.event_date && f.start_time && f.registration_deadline > `${f.event_date}T${f.start_time}`)
-      err["registration_deadline"] = "Deadline must be before the event starts.";
-    if (!initial && f.event_date && f.start_time && new Date(`${f.event_date}T${f.start_time}+05:30`) < new Date())
-      err["event_date"] = "Event must be in the future.";
+    const err = validateEventForm(f, initial);
     setErrors(err);
-    if (Object.keys(err).length) return;
+    const first = Object.keys(err)[0];
+    if (first) {
+      document.getElementById(first)?.focus();
+      toast.error("Please fix the highlighted fields.");
+      return;
+    }
 
-    const payload = {
-      title: t(f.title),
-      club_name: t(f.club_name),
-      description: t(f.description),
-      event_date: f.event_date,
-      start_time: f.start_time,
-      end_time: f.end_time,
-      venue: t(f.venue),
-      category: f.category as Category,
-      capacity: cap,
-      cover_image_url: t(f.cover_image_url) || null,
-      registration_deadline: new Date(`${f.registration_deadline}:00+05:30`).toISOString(),
-    };
+    const payload = toPayload(f);
+    let res;
     setBusy(true);
-    const res = initial
-      ? await supabase.from("events").update(payload).eq("id", initial.id).select("id").single()
-      : await supabase.from("events").insert(payload).select("id").single();
+    if (initial) {
+      // Only send what changed, so untouched values never trip server rules.
+      const before = toPayload(initialValues(initial));
+      const changes = Object.fromEntries(
+        Object.entries(payload).filter(([k, v]) => before[k as keyof typeof before] !== v),
+      ) as Partial<typeof payload>;
+      if (!Object.keys(changes).length) {
+        setBusy(false);
+        toast.info("No changes to save.");
+        return;
+      }
+      res = await supabase.from("events").update(changes).eq("id", initial.id).select("id").maybeSingle();
+      if (!res.error && !res.data) res = { ...res, error: { message: "FORBIDDEN" } };
+    } else {
+      res = await supabase.from("events").insert(payload).select("id").single();
+    }
     setBusy(false);
     if (res.error || !res.data) {
       toast.error(friendlyError(res.error));
@@ -85,40 +61,115 @@ export function EventForm({ initial, onSaved }: { initial?: EventRow; onSaved: (
     onSaved(res.data.id);
   }
 
-  const field = (k: keyof typeof f, label: string, el: React.ReactNode) => (
+  const field = (k: keyof EventFormValues, label: string, el: React.ReactNode, hint?: string) => (
     <div className="space-y-1.5">
       <Label htmlFor={k}>{label}</Label>
       {el}
-      {errors[k] && <p className="text-sm text-destructive">{errors[k]}</p>}
+      {errors[k] ? (
+        <p id={`${k}-error`} className="text-sm text-destructive">
+          {errors[k]}
+        </p>
+      ) : (
+        hint && <p className="text-xs text-muted-foreground">{hint}</p>
+      )}
     </div>
   );
-  const input = (k: keyof typeof f, props: React.ComponentProps<typeof Input> = {}) => (
-    <Input id={k} value={f[k]} onChange={(e) => set(k)(e.target.value)} {...props} />
+  const a11y = (k: keyof EventFormValues) => ({
+    "aria-invalid": !!errors[k] || undefined,
+    "aria-describedby": errors[k] ? `${k}-error` : undefined,
+  });
+  const input = (k: keyof EventFormValues, props: React.ComponentProps<typeof Input> = {}) => (
+    <Input id={k} value={f[k]} onChange={(e) => set(k)(e.target.value)} {...a11y(k)} {...props} />
   );
+  const preview = f.cover_image_url.trim();
 
   return (
-    <form onSubmit={submit} noValidate className="grid gap-5 rounded-2xl border bg-card p-6 shadow-card md:grid-cols-2">
-      <div className="md:col-span-2">{field("title", "Event title", input("title", { maxLength: 150 }))}</div>
-      {field("club_name", "Organising club", input("club_name", { maxLength: 100 }))}
+    <form
+      onSubmit={submit}
+      noValidate
+      className="grid gap-5 rounded-2xl border bg-card p-6 shadow-card md:grid-cols-2"
+    >
+      <div className="md:col-span-2">{field("title", "Event title *", input("title", { maxLength: 150 }))}</div>
+      {field(
+        "club_name",
+        "Organising club or department *",
+        input("club_name", { maxLength: 100 }),
+      )}
       {field(
         "category",
-        "Category",
-        <Select value={f.category} onValueChange={set("category")}>
-          <SelectTrigger id="category"><SelectValue placeholder="Choose category" /></SelectTrigger>
-          <SelectContent>{CATEGORIES.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+        "Category *",
+        <Select value={f.category} onValueChange={(v) => set("category")(v as Category)}>
+          <SelectTrigger id="category" {...a11y("category")}>
+            <SelectValue placeholder="Choose category" />
+          </SelectTrigger>
+          <SelectContent>
+            {CATEGORIES.map((c) => (
+              <SelectItem key={c} value={c}>
+                {c}
+              </SelectItem>
+            ))}
+          </SelectContent>
         </Select>,
       )}
       <div className="md:col-span-2">
-        {field("description", "Description", <Textarea id="description" rows={5} value={f.description} onChange={(e) => set("description")(e.target.value)} />)}
+        {field(
+          "short_description",
+          "Short description",
+          input("short_description", { maxLength: 200, placeholder: "One line shown at the top of the event page" }),
+          `${f.short_description.trim().length}/200`,
+        )}
       </div>
-      {field("event_date", "Date", input("event_date", { type: "date" }))}
-      {field("venue", "Venue", input("venue", { maxLength: 150 }))}
-      {field("start_time", "Start time", input("start_time", { type: "time" }))}
-      {field("end_time", "End time", input("end_time", { type: "time" }))}
-      {field("capacity", "Maximum capacity", input("capacity", { type: "number", min: 1 }))}
-      {field("registration_deadline", "Registration deadline (IST)", input("registration_deadline", { type: "datetime-local" }))}
       <div className="md:col-span-2">
-        {field("cover_image_url", "Cover image URL (optional — a category image is used otherwise)", input("cover_image_url", { placeholder: "https://…" }))}
+        {field(
+          "description",
+          "Full description *",
+          <Textarea
+            id="description"
+            rows={6}
+            maxLength={5000}
+            value={f.description}
+            onChange={(e) => set("description")(e.target.value)}
+            {...a11y("description")}
+          />,
+        )}
+      </div>
+      {field("event_date", "Date *", input("event_date", { type: "date" }))}
+      {field("venue", "Venue *", input("venue", { maxLength: 150 }))}
+      {field("start_time", "Start time (IST) *", input("start_time", { type: "time" }))}
+      {field("end_time", "End time (IST) *", input("end_time", { type: "time" }))}
+      {field(
+        "capacity",
+        "Total seat capacity *",
+        input("capacity", { type: "number", min: initial?.confirmed_count || 1, max: MAX_CAPACITY, inputMode: "numeric" }),
+        initial?.confirmed_count
+          ? `${initial.confirmed_count} seats are already taken — capacity can't go below that.`
+          : undefined,
+      )}
+      {field(
+        "registration_deadline",
+        "Registration deadline (IST) *",
+        input("registration_deadline", { type: "datetime-local" }),
+        "Must be on or before the event start.",
+      )}
+      <div className="md:col-span-2">
+        {field(
+          "contact_info",
+          "Contact / organiser details",
+          input("contact_info", { maxLength: 200, placeholder: "e.g. Riya Patil, events@college.edu" }),
+        )}
+      </div>
+      <div className="grid gap-4 md:col-span-2 md:grid-cols-[1fr_200px]">
+        {field(
+          "cover_image_url",
+          "Banner image URL",
+          input("cover_image_url", { placeholder: "https://…", inputMode: "url" }),
+          "Optional — the category image is used otherwise.",
+        )}
+        <img
+          src={preview && /^https?:\/\/\S+$/.test(preview) ? preview : f.category ? CATEGORY_INFO[f.category].image : CATEGORY_INFO.Technical.image}
+          alt="Banner preview"
+          className="aspect-video w-full rounded-xl border object-cover"
+        />
       </div>
       <div className="md:col-span-2">
         <Button type="submit" size="lg" disabled={busy}>

@@ -18,7 +18,9 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as EventsIndexRouteImport } from './routes/events.index'
 import { Route as EventsEventIdRouteImport } from './routes/events.$eventId'
 import { Route as PassTokenRouteImport } from './routes/pass.$token'
+import { Route as VerifyTokenRouteImport } from './routes/verify.$token'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminTeamRouteImport } from './routes/_authenticated/admin.team'
 import { Route as AuthenticatedAdminVerifyRouteImport } from './routes/_authenticated/admin.verify'
 import { Route as AuthenticatedAdminEventsNewRouteImport } from './routes/_authenticated/admin.events.new'
 import { Route as AuthenticatedAdminEventsEventIdEditRouteImport } from './routes/_authenticated/admin.events.$eventId.edit'
@@ -68,9 +70,19 @@ const PassTokenRoute = PassTokenRouteImport.update({
   path: '/pass/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VerifyTokenRoute = VerifyTokenRouteImport.update({
+  id: '/verify/$token',
+  path: '/verify/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
+const AuthenticatedAdminTeamRoute = AuthenticatedAdminTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
 const AuthenticatedAdminVerifyRoute =
@@ -106,7 +118,9 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/events/$eventId': typeof EventsEventIdRoute
   '/pass/$token': typeof PassTokenRoute
+  '/verify/$token': typeof VerifyTokenRoute
   '/events/': typeof EventsIndexRoute
+  '/admin/team': typeof AuthenticatedAdminTeamRoute
   '/admin/verify': typeof AuthenticatedAdminVerifyRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/admin/events/new': typeof AuthenticatedAdminEventsNewRoute
@@ -120,7 +134,9 @@ export interface FileRoutesByTo {
   '/my-passes': typeof MyPassesRoute
   '/events/$eventId': typeof EventsEventIdRoute
   '/pass/$token': typeof PassTokenRoute
+  '/verify/$token': typeof VerifyTokenRoute
   '/events': typeof EventsIndexRoute
+  '/admin/team': typeof AuthenticatedAdminTeamRoute
   '/admin/verify': typeof AuthenticatedAdminVerifyRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/admin/events/new': typeof AuthenticatedAdminEventsNewRoute
@@ -137,7 +153,9 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/events/$eventId': typeof EventsEventIdRoute
   '/pass/$token': typeof PassTokenRoute
+  '/verify/$token': typeof VerifyTokenRoute
   '/events/': typeof EventsIndexRoute
+  '/_authenticated/admin/team': typeof AuthenticatedAdminTeamRoute
   '/_authenticated/admin/verify': typeof AuthenticatedAdminVerifyRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/admin/events/new': typeof AuthenticatedAdminEventsNewRoute
@@ -154,7 +172,9 @@ export interface FileRouteTypes {
     | '/admin'
     | '/events/$eventId'
     | '/pass/$token'
+    | '/verify/$token'
     | '/events/'
+    | '/admin/team'
     | '/admin/verify'
     | '/admin/'
     | '/admin/events/new'
@@ -168,7 +188,9 @@ export interface FileRouteTypes {
     | '/my-passes'
     | '/events/$eventId'
     | '/pass/$token'
+    | '/verify/$token'
     | '/events'
+    | '/admin/team'
     | '/admin/verify'
     | '/admin'
     | '/admin/events/new'
@@ -184,7 +206,9 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/events/$eventId'
     | '/pass/$token'
+    | '/verify/$token'
     | '/events/'
+    | '/_authenticated/admin/team'
     | '/_authenticated/admin/verify'
     | '/_authenticated/admin/'
     | '/_authenticated/admin/events/new'
@@ -200,6 +224,7 @@ export interface RootRouteChildren {
   MyPassesRoute: typeof MyPassesRoute
   EventsEventIdRoute: typeof EventsEventIdRoute
   PassTokenRoute: typeof PassTokenRoute
+  VerifyTokenRoute: typeof VerifyTokenRoute
   EventsIndexRoute: typeof EventsIndexRoute
 }
 
@@ -268,11 +293,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PassTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/verify/$token': {
+      id: '/verify/$token'
+      path: '/verify/$token'
+      fullPath: '/verify/$token'
+      preLoaderRoute: typeof VerifyTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/team': {
+      id: '/_authenticated/admin/team'
+      path: '/team'
+      fullPath: '/admin/team'
+      preLoaderRoute: typeof AuthenticatedAdminTeamRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/verify': {
@@ -307,6 +346,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminTeamRoute: typeof AuthenticatedAdminTeamRoute
   AuthenticatedAdminVerifyRoute: typeof AuthenticatedAdminVerifyRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
   AuthenticatedAdminEventsNewRoute: typeof AuthenticatedAdminEventsNewRoute
@@ -315,6 +355,7 @@ interface AuthenticatedAdminRouteChildren {
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminTeamRoute: AuthenticatedAdminTeamRoute,
   AuthenticatedAdminVerifyRoute: AuthenticatedAdminVerifyRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
   AuthenticatedAdminEventsNewRoute: AuthenticatedAdminEventsNewRoute,
@@ -346,6 +387,7 @@ const rootRouteChildren: RootRouteChildren = {
   MyPassesRoute: MyPassesRoute,
   EventsEventIdRoute: EventsEventIdRoute,
   PassTokenRoute: PassTokenRoute,
+  VerifyTokenRoute: VerifyTokenRoute,
   EventsIndexRoute: EventsIndexRoute,
 }
 export const routeTree = rootRouteImport

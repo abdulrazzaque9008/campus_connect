@@ -87,35 +87,101 @@ export const REGISTER_ERRORS: Record<string, string> = {
   EVENT_FULL: "Sorry, this event is full.",
 };
 
+// Messages for the codes raised by the database guards (see drizzle/migrations).
+export const ADMIN_ERRORS: Record<string, string> = {
+  EVENT_LOCKED: "Cancelled or completed events can't be changed.",
+  EVENT_IN_PAST: "The event must start in the future.",
+  DEADLINE_AFTER_START: "The registration deadline must be before the event starts.",
+  DEADLINE_REQUIRED: "A registration deadline is required.",
+  DEADLINE_IN_PAST: "The registration deadline must be in the future.",
+  INVALID_DESCRIPTION: "The description must be 10–5000 characters.",
+  INVALID_VENUE: "The venue must be 2–150 characters.",
+  INVALID_SHORT_DESCRIPTION: "The short description can be at most 200 characters.",
+  INVALID_CONTACT: "Contact details can be at most 200 characters.",
+  INVALID_IMAGE_URL: "The image URL must start with http:// or https://.",
+  EVENT_HAS_REGISTRATIONS: "This event has registrations, so it can't be deleted. Cancel it instead.",
+  REGISTRATION_FINAL: "A cancelled registration can't be re-confirmed.",
+  FORBIDDEN: "You don't have organiser access for this action.",
+  USER_NOT_FOUND: "No account with that email. Ask them to create an account on the login page first.",
+  EMAIL_NOT_CONFIRMED: "That account hasn't confirmed its email address yet.",
+  CANNOT_REVOKE_SELF: "You can't remove your own organiser access.",
+};
+
 export function friendlyError(err: { message?: string } | null | undefined) {
   const msg = err?.message ?? "";
-  for (const key of Object.keys(REGISTER_ERRORS)) if (msg.includes(key)) return REGISTER_ERRORS[key] ?? msg;
+  const known = { ...REGISTER_ERRORS, ...ADMIN_ERRORS };
+  for (const key of Object.keys(known)) if (msg.includes(key)) return known[key] ?? msg;
   if (msg.includes("Capacity cannot be lower")) return msg;
+  if (/row-level security|permission denied/i.test(msg)) return ADMIN_ERRORS["FORBIDDEN"]!;
   if (/fetch|network/i.test(msg)) return "Network problem — check your connection and try again.";
   return msg || "Something went wrong. Please try again.";
+}
+
+/** Public base URL encoded in QR passes. Set VITE_PUBLIC_SITE_URL so passes
+ * issued from a preview URL still point at the deployed site. */
+export function siteOrigin() {
+  const configured = (import.meta.env["VITE_PUBLIC_SITE_URL"] as string | undefined)?.trim();
+  if (configured) return configured.replace(/\/+$/, "");
+  return typeof window !== "undefined" ? window.location.origin : "";
+}
+
+export function verifyUrl(token: string) {
+  return `${siteOrigin()}/verify/${token}`;
+}
+
+export function passUrl(token: string) {
+  return `${siteOrigin()}/pass/${token}`;
+}
+
+const TOKEN_RE = /^[a-f0-9]{32,128}$/i;
+
+/** Accepts a raw token or any pass / verification link (current or legacy
+ * `/admin/verify?token=` format) and returns the token, or null. */
+export function parsePassToken(input: string): string | null {
+  const v = input.trim();
+  if (TOKEN_RE.test(v)) return v.toLowerCase();
+  const m = v.match(/(?:[?&]token=|\/verify\/|\/pass\/)([a-f0-9]{32,128})(?![a-f0-9])/i);
+  return m?.[1] ? m[1].toLowerCase() : null;
+}
+
+export function isUuid(v: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
 }
 
 // Saved passes on this device (the token itself is the secret).
 const PASS_KEY = "campusconnect.passes";
 export function savedPassTokens(): string[] {
   try {
-    return JSON.parse(localStorage.getItem(PASS_KEY) || "[]");
+    const list: unknown = JSON.parse(localStorage.getItem(PASS_KEY) || "[]");
+    return Array.isArray(list) ? list.filter((t): t is string => typeof t === "string" && TOKEN_RE.test(t)) : [];
   } catch {
     return [];
   }
 }
+function writePassTokens(list: string[]) {
+  try {
+    localStorage.setItem(PASS_KEY, JSON.stringify(list));
+    return true;
+  } catch {
+    return false; // private mode / storage full: the pass link still works
+  }
+}
 export function savePassToken(token: string) {
-  const list = savedPassTokens().filter((t) => t !== token);
-  localStorage.setItem(PASS_KEY, JSON.stringify([token, ...list]));
+  return writePassTokens([token, ...savedPassTokens().filter((t) => t !== token)]);
 }
 export function removePassToken(token: string) {
-  localStorage.setItem(PASS_KEY, JSON.stringify(savedPassTokens().filter((t) => t !== token)));
+  writePassTokens(savedPassTokens().filter((t) => t !== token));
 }
 
 export function csvCell(v: unknown) {
   let s = v == null ? "" : String(v);
   if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; // formula-injection guard
   return `"${s.replace(/"/g, '""')}"`;
+}
+
+export function toCsv(rows: unknown[][]) {
+  // BOM so Excel opens UTF-8 names correctly
+  return "\ufeff" + rows.map((r) => r.map(csvCell).join(",")).join("\r\n");
 }
 
 export function slugify(s: string) {

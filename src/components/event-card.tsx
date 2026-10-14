@@ -40,6 +40,9 @@ export function EventCard({ event }: { event: EventRow }) {
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-accent">{event.club_name}</p>
           <h3 className="mt-1 line-clamp-2 text-lg font-bold leading-snug">{event.title}</h3>
+          {event.short_description && (
+            <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{event.short_description}</p>
+          )}
         </div>
         <ul className="space-y-1.5 text-sm text-muted-foreground">
           <li className="flex items-center gap-2">

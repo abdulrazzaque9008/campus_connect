@@ -35,6 +35,7 @@ export type Database = {
           category: Database["public"]["Enums"]["event_category"]
           club_name: string
           confirmed_count: number
+          contact_info: string | null
           cover_image_url: string | null
           created_at: string
           created_by: string | null
@@ -44,6 +45,7 @@ export type Database = {
           id: string
           is_sample: boolean
           registration_deadline: string | null
+          short_description: string | null
           start_time: string
           status: Database["public"]["Enums"]["event_status"]
           title: string
@@ -55,6 +57,7 @@ export type Database = {
           category: Database["public"]["Enums"]["event_category"]
           club_name: string
           confirmed_count?: number
+          contact_info?: string | null
           cover_image_url?: string | null
           created_at?: string
           created_by?: string | null
@@ -64,6 +67,7 @@ export type Database = {
           id?: string
           is_sample?: boolean
           registration_deadline?: string | null
+          short_description?: string | null
           start_time: string
           status?: Database["public"]["Enums"]["event_status"]
           title: string
@@ -75,6 +79,7 @@ export type Database = {
           category?: Database["public"]["Enums"]["event_category"]
           club_name?: string
           confirmed_count?: number
+          contact_info?: string | null
           cover_image_url?: string | null
           created_at?: string
           created_by?: string | null
@@ -84,6 +89,7 @@ export type Database = {
           id?: string
           is_sample?: boolean
           registration_deadline?: string | null
+          short_description?: string | null
           start_time?: string
           status?: Database["public"]["Enums"]["event_status"]
           title?: string
@@ -112,39 +118,48 @@ export type Database = {
       }
       registrations: {
         Row: {
+          checked_in_at: string | null
+          checked_in_by: string | null
           code: string
           department: string
           event_id: string
           id: string
           prn: string
           registered_at: string
-          registration_token: string
+          registration_token: string | null
           status: Database["public"]["Enums"]["registration_status"]
           student_name: string
+          token_hash: string
           user_id: string | null
         }
         Insert: {
+          checked_in_at?: string | null
+          checked_in_by?: string | null
           code?: string
           department: string
           event_id: string
           id?: string
           prn: string
           registered_at?: string
-          registration_token?: string
+          registration_token?: string | null
           status?: Database["public"]["Enums"]["registration_status"]
           student_name: string
+          token_hash: string
           user_id?: string | null
         }
         Update: {
+          checked_in_at?: string | null
+          checked_in_by?: string | null
           code?: string
           department?: string
           event_id?: string
           id?: string
           prn?: string
           registered_at?: string
-          registration_token?: string
+          registration_token?: string | null
           status?: Database["public"]["Enums"]["registration_status"]
           student_name?: string
+          token_hash?: string
           user_id?: string | null
         }
         Relationships: [
@@ -180,13 +195,32 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bootstrap_organiser: { Args: { _email: string }; Returns: string }
+      check_in_pass: {
+        Args: { _token: string }
+        Returns: {
+          checked_in_at: string | null
+          registration_code: string | null
+          result: string
+          student_name: string | null
+        }[]
+      }
+      event_attendance_counts: {
+        Args: never
+        Returns: {
+          checked_in: number
+          event_id: string
+        }[]
+      }
       get_pass: {
         Args: { _token: string }
         Returns: {
+          checked_in_at: string | null
           club_name: string
           department: string
           end_time: string
           event_date: string
+          event_id: string
           event_status: Database["public"]["Enums"]["event_status"]
           event_title: string
           registration_code: string
@@ -196,6 +230,7 @@ export type Database = {
           venue: string
         }[]
       }
+      grant_organiser: { Args: { _email: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -203,6 +238,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      list_organisers: {
+        Args: never
+        Returns: {
+          email: string
+          full_name: string | null
+          user_id: string
+        }[]
+      }
+      mask_name: { Args: { _n: string }; Returns: string }
+      pass_token_hash: { Args: { _token: string }; Returns: string }
       register_for_event: {
         Args: {
           _department: string
@@ -215,16 +260,28 @@ export type Database = {
           token: string
         }[]
       }
+      registration_department_breakdown: {
+        Args: never
+        Returns: {
+          department: string
+          registrations: number
+        }[]
+      }
+      revoke_organiser: { Args: { _user_id: string }; Returns: undefined }
       verify_pass: {
         Args: { _token: string }
         Returns: {
-          department: string
-          event_date: string
-          event_title: string
-          reason: string
-          registration_code: string
-          student_name: string
-          valid: boolean
+          checked_in_at: string | null
+          department: string | null
+          end_time: string | null
+          event_date: string | null
+          event_title: string | null
+          is_staff: boolean
+          registration_code: string | null
+          result: string
+          start_time: string | null
+          student_name: string | null
+          venue: string | null
         }[]
       }
     }

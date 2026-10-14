@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { ArrowLeft, Calendar, Clock, Loader2, MapPin, Timer, Users } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, Loader2, Mail, MapPin, Timer, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,7 @@ import {
   fmtDateTime,
   fmtTime,
   friendlyError,
+  isUuid,
   registrationState,
   savePassToken,
   seatsLeft,
@@ -40,10 +41,12 @@ export const Route = createFileRoute("/events/$eventId")({
 
 function EventDetail() {
   const { eventId } = Route.useParams();
-  const { data: ev, isLoading, error } = useQuery(eventQuery(eventId));
+  const valid = isUuid(eventId);
+  // Poll so the seat counter stays current while students are deciding.
+  const { data: ev, isLoading, error } = useQuery({ ...eventQuery(eventId), enabled: valid, refetchInterval: 15_000 });
   const [open, setOpen] = useState(false);
 
-  if (isLoading)
+  if (valid && isLoading)
     return (
       <div className="grid min-h-[50vh] place-items-center">
         <Loader2 className="size-8 animate-spin text-accent" />
@@ -77,6 +80,7 @@ function EventDetail() {
           </div>
           <h1 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">{ev.title}</h1>
           <p className="mt-2 font-semibold text-accent">by {ev.club_name}</p>
+          {ev.short_description && <p className="mt-4 text-lg font-medium text-foreground/90">{ev.short_description}</p>}
           <p className="mt-6 whitespace-pre-line leading-relaxed text-foreground/85">{ev.description}</p>
         </div>
         <aside className="h-fit rounded-2xl border bg-card p-6 shadow-card lg:sticky lg:top-24">
@@ -87,6 +91,9 @@ function EventDetail() {
             <li className="flex gap-3"><MapPin className="size-4 text-accent" /> {ev.venue}</li>
             {ev.registration_deadline && (
               <li className="flex gap-3"><Timer className="size-4 text-accent" /> Register by {fmtDateTime(ev.registration_deadline)}</li>
+            )}
+            {ev.contact_info && (
+              <li className="flex gap-3"><Mail className="size-4 shrink-0 text-accent" /> <span className="break-words">{ev.contact_info}</span></li>
             )}
           </ul>
           <div className="mt-6">

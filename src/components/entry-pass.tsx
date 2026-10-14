@@ -1,6 +1,6 @@
 import { QRCodeCanvas } from "qrcode.react";
 import { CalendarHeart } from "lucide-react";
-import { fmtDate, fmtTime } from "@/lib/events";
+import { fmtDate, fmtDateTime, fmtTime, verifyUrl } from "@/lib/events";
 
 export type PassData = {
   registration_code: string;
@@ -14,12 +14,8 @@ export type PassData = {
   venue: string;
   club_name: string;
   event_status: "published" | "cancelled" | "completed";
+  checked_in_at?: string | null;
 };
-
-export function verifyUrl(token: string) {
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-  return `${origin}/admin/verify?token=${token}`;
-}
 
 export function EntryPass({ pass, token, id }: { pass: PassData; token: string; id?: string }) {
   const invalid = pass.status !== "confirmed" || pass.event_status === "cancelled";
@@ -42,6 +38,11 @@ export function EntryPass({ pass, token, id }: { pass: PassData; token: string; 
             <div><dt className="text-muted-foreground">Attendee</dt><dd className="font-semibold">{pass.student_name}</dd></div>
             <div><dt className="text-muted-foreground">Registration ID</dt><dd className="font-mono font-semibold">{pass.registration_code}</dd></div>
           </dl>
+          {!invalid && pass.checked_in_at && (
+            <p className="rounded-lg bg-success/10 px-3 py-2 text-sm font-semibold text-success">
+              Checked in {fmtDateTime(pass.checked_in_at)}
+            </p>
+          )}
           {invalid && (
             <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm font-semibold text-destructive">
               {pass.event_status === "cancelled" ? "This event has been cancelled." : "This registration was cancelled."}

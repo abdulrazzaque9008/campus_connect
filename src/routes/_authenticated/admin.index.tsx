@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { CalendarCheck, CalendarClock, Ticket, Users } from "lucide-react";
+import { CalendarCheck, CalendarClock, ScanLine, Ticket, Users } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Legend, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Cell } from "recharts";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -21,25 +21,51 @@ const COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--cha
 
 function Overview() {
   const qc = useQueryClient();
-  const { data: events, isLoading } = useQuery(allEventsQuery);
-  const { data: depts } = useQuery({
+  const { data: events, isLoading, error } = useQuery(allEventsQuery);
+  // Aggregated in the database so the numbers are exact, not capped by the API row limit.
+  const { data: depts, error: deptError } = useQuery({
     queryKey: ["admin", "dept-breakdown"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("registrations").select("department").eq("status", "confirmed");
+      const { data, error } = await supabase.rpc("registration_department_breakdown");
       if (error) throw error;
-      const m: Record<string, number> = {};
-      data.forEach((r) => (m[r.department] = (m[r.department] ?? 0) + 1));
-      return Object.entries(m).map(([name, value]) => ({ name, value }));
+      return data.map((r) => ({ name: r.department, value: Number(r.registrations) }));
+    },
+  });
+  const { data: attendance } = useQuery({
+    queryKey: ["admin", "attendance"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("event_attendance_counts");
+      if (error) throw error;
+      return Object.fromEntries(data.map((r) => [r.event_id, Number(r.checked_in)])) as Record<string, number>;
     },
   });
 
   async function setStatus(e: EventRow, status: "cancelled" | "completed"): Promise<void> {
-    const { error } = await supabase.from("events").update({ status }).eq("id", e.id);
-    if (error) { toast.error(friendlyError(error)); return; }
+    const { data, error } = await supabase.from("events").update({ status }).eq("id", e.id).select("id");
+    if (error || !data?.length) {
+      toast.error(friendlyError(error ?? { message: "FORBIDDEN" }));
+      return;
+    }
     toast.success(status === "cancelled" ? "Event cancelled" : "Marked as completed");
     qc.invalidateQueries({ queryKey: ["events"] });
   }
 
+  async function remove(e: EventRow): Promise<void> {
+    const { data, error } = await supabase.from("events").delete().eq("id", e.id).select("id");
+    if (error || !data?.length) {
+      toast.error(friendlyError(error ?? { message: "FORBIDDEN" }));
+      return;
+    }
+    toast.success("Event deleted");
+    qc.invalidateQueries({ queryKey: ["events"] });
+  }
+
+  if (error)
+    return (
+      <p className="rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-destructive">
+        Couldn't load events: {friendlyError(error)}
+      </p>
+    );
   if (isLoading || !events) return <div className="h-64 animate-pulse rounded-2xl bg-muted" />;
 
   const now = new Date();
@@ -48,7 +74,16 @@ function Overview() {
     { label: "Total events", value: events.length, icon: CalendarCheck },
     { label: "Upcoming events", value: upcoming.length, icon: CalendarClock },
     { label: "Confirmed registrations", value: events.reduce((s, e) => s + e.confirmed_count, 0), icon: Users },
-    { label: "Events full", value: events.filter((e) => e.confirmed_count >= e.capacity).length, icon: Ticket },
+    {
+      label: "Checked in",
+      value: attendance ? Object.values(attendance).reduce((s, n) => s + n, 0) : "…",
+      icon: ScanLine,
+    },
+    {
+      label: "Events full",
+      value: events.filter((e) => e.status === "published" && e.confirmed_count >= e.capacity).length,
+      icon: Ticket,
+    },
   ];
   const chart = events
     .filter((e) => e.status !== "cancelled")
@@ -59,7 +94,7 @@ function Overview() {
     <div className="space-y-10">
       <div>
         <h1 className="text-3xl font-extrabold">Dashboard</h1>
-        <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
           {stats.map((s) => (
             <div key={s.label} className="rounded-2xl border bg-card p-5 shadow-card">
               <s.icon className="size-5 text-accent" />
@@ -89,7 +124,9 @@ function Overview() {
         </div>
         <div className="rounded-2xl border bg-card p-5 shadow-card">
           <h2 className="font-bold">Registrations by department</h2>
-          {depts && depts.length ? (
+          {deptError ? (
+            <p className="mt-10 text-center text-sm text-destructive">Couldn't load this chart.</p>
+          ) : depts && depts.length ? (
             <div className="mt-4 h-72">
               <ResponsiveContainer>
                 <PieChart>
@@ -97,6 +134,7 @@ function Overview() {
                     {depts.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length] ?? "var(--chart-1)"} />)}
                   </Pie>
                   <Tooltip />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -116,10 +154,17 @@ function Overview() {
           <table className="w-full text-sm">
             <thead className="bg-muted/60 text-left text-muted-foreground">
               <tr>
-                <th className="p-3">Event</th><th className="p-3">Date</th><th className="p-3">Seats</th><th className="p-3">Status</th><th className="p-3 text-right">Actions</th>
+                <th className="p-3">Event</th><th className="p-3">Date</th><th className="p-3">Seats</th><th className="p-3">Checked in</th><th className="p-3">Status</th><th className="p-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
+              {!events.length && (
+                <tr>
+                  <td colSpan={6} className="p-10 text-center text-muted-foreground">
+                    No events yet — use "Create event" to publish your first one.
+                  </td>
+                </tr>
+              )}
               {events.map((e) => (
                 <tr key={e.id} className="border-t">
                   <td className="p-3">
@@ -128,26 +173,43 @@ function Overview() {
                   </td>
                   <td className="whitespace-nowrap p-3">{fmtDate(e.event_date)}</td>
                   <td className="whitespace-nowrap p-3">{e.confirmed_count}/{e.capacity}</td>
+                  <td className="whitespace-nowrap p-3">{attendance ? (attendance[e.id] ?? 0) : "…"}</td>
                   <td className="p-3">
                     <Badge variant={e.status === "cancelled" ? "destructive" : e.status === "completed" ? "secondary" : "default"}>{e.status}</Badge>
                   </td>
                   <td className="p-3">
                     <div className="flex flex-wrap justify-end gap-1">
                       <Button asChild size="sm" variant="ghost"><Link to="/events/$eventId" params={{ eventId: e.id }}>View</Link></Button>
-                      <Button asChild size="sm" variant="ghost"><Link to="/admin/events/$eventId/edit" params={{ eventId: e.id }}>Edit</Link></Button>
+                      {e.status === "published" && (
+                        <Button asChild size="sm" variant="ghost"><Link to="/admin/events/$eventId/edit" params={{ eventId: e.id }}>Edit</Link></Button>
+                      )}
                       <Button asChild size="sm" variant="outline"><Link to="/admin/events/$eventId/registrations" params={{ eventId: e.id }}>Registrations</Link></Button>
                       
                       
                       {e.status === "published" && (
                         <>
-                          <Button size="sm" variant="ghost" onClick={() => setStatus(e, "completed")}>Complete</Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild><Button size="sm" variant="ghost">Complete</Button></AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Mark "{e.title}" as completed?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Registration and check-in will close and the event can no longer be edited. This can't be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Not yet</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => setStatus(e, "completed")}>Mark completed</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                           <AlertDialog>
                             <AlertDialogTrigger asChild><Button size="sm" variant="ghost" className="text-destructive">Cancel</Button></AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Cancel "{e.title}"?</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Registration will close and existing entry passes will be rejected at the door. Registrations are kept for your records.
+                                  Registration will close and existing entry passes will be rejected at the door. Registrations are kept for your records. This can't be undone.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
@@ -159,6 +221,25 @@ function Overview() {
                             </AlertDialogContent>
                           </AlertDialog>
                         </>
+                      )}
+                      {e.confirmed_count === 0 && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild><Button size="sm" variant="ghost" className="text-destructive">Delete</Button></AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete "{e.title}"?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                The event is removed permanently. Events that have any registrations can't be deleted — cancel them instead.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Keep event</AlertDialogCancel>
+                              <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => remove(e)}>
+                                Delete event
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       )}
                     </div>
                   </td>
